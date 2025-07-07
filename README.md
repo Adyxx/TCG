@@ -1,6 +1,6 @@
 # TCG
 
-
+```
 tcg_project/
 │
 ├── backend/                   # Shared game logic and DB (used by both frontends)
@@ -36,3 +36,4 @@ tcg_project/
 ├── tests/
 ├── requirements.txt
 └── README.md
+```

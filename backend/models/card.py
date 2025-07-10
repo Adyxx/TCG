@@ -13,7 +13,6 @@ class Card(models.Model):
     character = models.ForeignKey(Character, null=True, blank=True, on_delete=models.SET_NULL, related_name='cards')
 
     text = models.TextField(blank=True)
-    # abilities = models.ManyToManyField('Ability', blank=True, related_name='cards')
 
     def __str__(self):
         return self.name

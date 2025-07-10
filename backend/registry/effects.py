@@ -5,22 +5,19 @@ def apply_haste(card):
 def draw_card(card):
     print(f"Drawing a card because of {card.name}'s ability.")
 
-    '''
-    
-    player = card.owner
-    deck = player.deck
-
-    if deck.cards.exists():
-        drawn_card = deck.cards.first()
-        player.hand.add(drawn_card)
-        deck.cards.remove(drawn_card)
-        print(f"{player.username} draws {drawn_card.name}")
-    else:
-        print("Deck is empty!")
-
-    '''
+def self_hurt_2(card):
+    print(f"Dealing 2 points of damage to your hero because of {card.name}'s ability.")
 
 EFFECT_REGISTRY = {
     "haste": apply_haste,
     "draw_card": draw_card,
+    "self_hurt_2": self_hurt_2,
 }
+
+'''
+
+buff_strength
+
+heal_3
+
+'''

@@ -1,29 +1,25 @@
-from typing import Optional
-from backend.models import Ability, Card
-from backend.registry.effects import EFFECT_REGISTRY 
-
+from backend.registry.effects import EFFECT_REGISTRY
+from backend.registry.conditions import CONDITION_REGISTRY
 
 class AbilityService:
     @staticmethod
-    def get_ability_by_name(name: str) -> Optional[Ability]:
-        try:
-            return Ability.objects.get(name=name)
-        except Ability.DoesNotExist:
-            return None
+    def execute_effect(effect, card):
+        func = EFFECT_REGISTRY.get(effect.script_reference)
+        if not func:
+            raise ValueError(f"Effect '{effect.name}' not registered.")
+        return func(card)
 
     @staticmethod
-    def get_ability_by_id(ability_id: int) -> Optional[Ability]:
-        try:
-            return Ability.objects.get(id=ability_id)
-        except Ability.DoesNotExist:
-            return None
+    def check_condition(binding, card) -> bool:
+        if not binding.condition:
+            return True
+        func = CONDITION_REGISTRY.get(binding.condition.script_reference)
+        if not func:
+            raise ValueError(f"Condition '{binding.condition}' not registered.")
+        return func(card)
 
     @staticmethod
-    def get_effect_function(script_reference: str):
-        if script_reference not in EFFECT_REGISTRY:
-            raise ValueError(f"No effect function registered for '{script_reference}'")
-        return EFFECT_REGISTRY[script_reference]
-
-    @staticmethod
-    def execute_ability(ability: Ability, card: Card):
-        """Executes the logic of an ability on a card."""
+    def trigger(card, trigger_code):
+        for binding in card.effect_bindings.filter(trigger__code=trigger_code):
+            if AbilityService.check_condition(binding, card):
+                AbilityService.execute_effect(binding.effect, card)

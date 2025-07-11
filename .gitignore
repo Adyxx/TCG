@@ -12,7 +12,7 @@ db.sqlite3
 *.pyc
 *.pyd
 
-# VS Code settings (if you use it)
+# VS Code settings
 .vscode/
 
 # Environment files

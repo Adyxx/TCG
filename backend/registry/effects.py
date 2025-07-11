@@ -1,14 +1,21 @@
-
 def apply_haste(card):
     print(f"{card.name} gains Haste!")
 
-def draw_card(card):
-    print(f"Drawing a card because of {card.name}'s ability.")
+def draw_card(card, value=1):
+    try:
+        amount = int(value)
+    except (ValueError, TypeError):
+        amount = 1
+    print(f"Drawing {amount} card(s) because of {card.name}'s ability.")
 
-def self_hurt_2(card):
+def self_hurt(card, value=2):
+    try:
+        damage = int(value)
+    except (ValueError, TypeError):
+        damage = 2
     player = card.owner
-    player.health -= 2
-    print(f"Dealing 2 points of damage to your hero because of {card.name}'s ability! Health is now {player.health}")
+    player.health -= damage
+    print(f"Dealing {damage} points of damage to your hero because of {card.name}'s ability! Health is now {player.health}")
 
 def override_deck_limit(card, new_limit):
     card.override_limit = new_limit
@@ -16,13 +23,6 @@ def override_deck_limit(card, new_limit):
 EFFECT_REGISTRY = {
     "apply_haste": apply_haste,
     "draw_card": draw_card,
-    "self_hurt_2": self_hurt_2,
+    "self_hurt": self_hurt,
+    "override_deck_limit": override_deck_limit,
 }
-
-'''
-
-buff_strength
-
-heal_3
-
-'''

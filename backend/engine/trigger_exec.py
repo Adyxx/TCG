@@ -1,6 +1,7 @@
 from backend.registry.effects import EFFECT_REGISTRY
 from backend.registry.conditions import CONDITION_REGISTRY
 from backend.registry.restrictions import RESTRICTION_REGISTRY
+import inspect
 
 
 def execute_trigger(card, trigger_code, player=None):
@@ -28,13 +29,17 @@ def execute_trigger(card, trigger_code, player=None):
                 else:
                     print(f"❌ No condition func found for {binding.condition.script_reference}")
 
-
             effect_func = EFFECT_REGISTRY.get(binding.effect.script_reference)
             if effect_func:
                 print(f"✅ Executing: {binding.effect.script_reference}")
-                effect_func(card)
-            else:
-                print(f"❌ Effect '{binding.effect.script_reference}' not found.")
+
+                sig = inspect.signature(effect_func)
+                params = sig.parameters
+
+                if len(params) >= 2:
+                    effect_func(card, binding.value)
+                else:
+                    effect_func(card)
 
     elif player:
         print(f"[PLAYER] Checking trigger {trigger_code} on all cards of {player.name}")
@@ -65,6 +70,12 @@ def execute_trigger(card, trigger_code, player=None):
                 effect_func = EFFECT_REGISTRY.get(binding.effect.script_reference)
                 if effect_func:
                     print(f"✅ Executing: {binding.effect.script_reference}")
-                    effect_func(board_card)
-                else:
-                    print(f"❌ Effect '{binding.effect.script_reference}' not found.")
+
+                    sig = inspect.signature(effect_func)
+                    params = sig.parameters
+
+                    if len(params) >= 2:
+                        effect_func(board_card, binding.value)
+                    else:
+                        effect_func(board_card)
+

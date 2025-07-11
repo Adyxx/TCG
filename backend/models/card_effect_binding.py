@@ -8,4 +8,4 @@ class CardEffectBinding(models.Model):
     restriction = models.ForeignKey('Restriction', on_delete=models.SET_NULL, null=True, blank=True)
 
     def __str__(self):
-        return f"{self.card.name} | {self.trigger.code} → {self.effect.name}"
+        return f"{self.card.name} | {self.trigger.script_reference} → {self.effect.name}"

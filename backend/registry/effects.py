@@ -6,7 +6,9 @@ def draw_card(card):
     print(f"Drawing a card because of {card.name}'s ability.")
 
 def self_hurt_2(card):
-    print(f"Dealing 2 points of damage to your hero because of {card.name}'s ability.")
+    player = card.owner
+    player.health -= 2
+    print(f"Dealing 2 points of damage to your hero because of {card.name}'s ability! Health is now {player.health}")
 
 EFFECT_REGISTRY = {
     "haste": apply_haste,

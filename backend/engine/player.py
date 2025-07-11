@@ -8,6 +8,7 @@ class Player:
         self.hand = []
         self.deck = list(Card.objects.all()[:5])  # Fake deck
         self.graveyard = []
+        self.board = []
         self.cards_played_this_turn = 0
 
         self.draw_starting_hand()

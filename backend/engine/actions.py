@@ -5,20 +5,28 @@ def play_card(player, index):
     if index < 0 or index >= len(player.hand):
         print("🚫 Invalid card index.")
         return
-
+    
     card = player.hand.pop(index)
+
+    card.owner = player
+    player.board.append(card)
+
     print(f"▶️ {player.name} plays {card.name}")
     execute_trigger(card, "on_play")
     player.cards_played_this_turn += 1
 
 
-def attack(player, target_player):
-    print(f"⚔️ {player.name} attacks {target_player.name} directly!")
-    target_player.health -= 2
-    print(f"💥 {target_player.name} takes 2 damage! Health: {target_player.health}")
-    if target_player.health <= 0:
-        print(f"🏁 {target_player.name} has been defeated!")
-        player.game_state.game_over = True
+def attack(attacker, defender):
+    total_attack = 0
+    for card in attacker.board:
+        if card.power > 0:
+            total_attack += card.power
+
+    print(f"⚔️ {attacker.name} attacks {defender.name} directly!")
+    defender.health -= total_attack
+    print(f"💥 {defender.name} takes {total_attack} damage! Health: {defender.health}")
+    execute_trigger(None, "on_attack", attacker)
+
 
 
 def end_turn(game_state):

@@ -22,6 +22,7 @@ admin.site.register(CardEffectBinding)
 class CardEffectBindingInline(admin.TabularInline):
     model = CardEffectBinding
     extra = 1
+    fields = ['trigger', 'effect', 'value', 'condition', 'restriction']
 
 class CardAdmin(admin.ModelAdmin):
     inlines = [CardEffectBindingInline]

@@ -17,6 +17,7 @@ EFFECT_REGISTRY = {
     "apply_haste": apply_haste,
     "draw_card": draw_card,
     "self_hurt_2": self_hurt_2,
+    "override_deck_limit": override_deck_limit,
 }
 
 '''

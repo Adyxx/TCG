@@ -2,6 +2,7 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from .users import User
 from .character import Character
+from backend.registry.effects import EFFECT_REGISTRY
 
 class Deck(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='decks')
@@ -32,16 +33,17 @@ class Deck(models.Model):
 
             limit = 1 if card.is_character_card else 3
 
-            custom_limit_binding = card.effect_bindings.filter(
-                trigger="on_deck_build",
-                effect="override_deck_limit"
-            ).first()
-
-            if custom_limit_binding:
-                try:
-                    limit = int(custom_limit_binding.value)
-                except (ValueError, TypeError):
-                    issues.append(f"Invalid override_deck_limit value on card '{card.name}'")
+            for binding in card.effect_bindings.filter(trigger__script_reference="on_deck_build"):
+                effect_name = binding.effect.script_reference
+                if effect_name == "override_deck_limit":
+                    try:
+                        new_limit = int(binding.value)
+                        effect_func = EFFECT_REGISTRY.get(effect_name)
+                        if effect_func:
+                            effect_func(card, new_limit)
+                            limit = getattr(card, 'override_limit', limit)
+                    except (ValueError, TypeError):
+                        issues.append(f"Invalid override_deck_limit value on card '{card.name}'")
 
             card_counts[card.id] = card_counts.get(card.id, 0) + count
             if card_counts[card.id] > limit:
@@ -58,42 +60,11 @@ class Deck(models.Model):
                 else:
                     character_card_tracker[cid] = True
 
-        '''
-        for deck_card in self.deck_cards.select_related("card__character"):
-            card = deck_card.card
-            count = deck_card.quantity
-
-            card_counts[card.id] = card_counts.get(card.id, 0) + count
-
-            if card.is_character_card and card.character:
-                cid = card.character.id
-
-                if cid in character_card_tracker:
-                    issues.append(
-                        f"Multiple character cards for '{card.character.name}' in deck."
-                    )
-                else:
-                    character_card_tracker[cid] = True
-
-                if count > 1:
-                    issues.append(
-                        f"Character card '{card.name}' exceeds the 1-copy limit."
-                    )
-            else:
-                if card_counts[card.id] > 3:
-                    issues.append(f"{card.name} exceeds the 3-copy limit.")
-
         return issues
-        '''
 
-    
-def clean(self):
-    if not self.pk:
-        return
-
-    issues = self.get_deck_issues()
-    if issues:
-        raise ValidationError(issues)
+    def clean(self):
+        pass
 
     def __str__(self):
         return f"{self.name} ({self.user.username})"
+

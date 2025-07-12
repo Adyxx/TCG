@@ -6,15 +6,21 @@ def play_card(player, index):
         print("🚫 Invalid card index.")
         return
     
-    card = player.hand.pop(index)
+    card = player.hand[index]
+    cost = getattr(card, "energy_cost", 1)
 
+    if player.energy < cost:
+        print(f"🚫 Not enough energy! Needed {cost}, but you have {player.energy}.")
+        return
+
+    card = player.hand.pop(index)
     card.owner = player
     player.board.append(card)
+    player.energy -= cost
 
-    print(f"▶️ {player.name} plays {card.name}")
+    print(f"▶️ {player.name} plays {card.name} for {cost} energy (Remaining: {player.energy})")
     execute_trigger(card, "on_play")
     player.cards_played_this_turn += 1
-
 
 def attack(attacker, defender):
     total_attack = 0

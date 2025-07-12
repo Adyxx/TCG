@@ -37,9 +37,6 @@ def select_user_deck(prompt):
     deck_index = int(input("Choose deck: "))
     return playable_decks[deck_index]
 
-def reset_passive_usage(player):
-    if hasattr(player, "_passive_usage"):
-        player._passive_usage.clear()
 
 def run_game():
     print("🎮 Starting test game...")
@@ -79,13 +76,13 @@ def run_game():
 
         current_player.draw_card() 
         execute_trigger(None, "on_turn_start", current_player)
-        reset_passive_usage(current_player)
+        player._class_trait_uses_this_turn = 0
 
         for card in current_player.board:
             card.tapped = False
             if card.summoning_sickness:
                 card.summoning_sickness = False 
-                
+
         while True:
             print(f"\n📜 {current_player.name}'s hand:")
             for i, card in enumerate(current_player.hand):

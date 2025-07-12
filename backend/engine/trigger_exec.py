@@ -108,6 +108,8 @@ def execute_trigger(card=None, trigger_code=None, player=None):
 
         # 2C. Run class trait if triggered
         if player.class_trait:
+            print(f"🧬 Evaluating class trait trigger: expecting '{player.class_trait.get('trigger')}', got '{trigger_code}'")
+
             trait_trigger = player.class_trait.get("trigger")
             if trait_trigger == trigger_code:
                 usage_limit = player.class_trait.get("uses_per_turn", 1)

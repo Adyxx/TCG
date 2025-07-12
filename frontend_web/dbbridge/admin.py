@@ -10,6 +10,8 @@ from backend.models import (
     Deck,
     DeckCard,
     Character,
+    CharacterPairSynergy,
+    CharacterRelationship,
 )
 
 admin.site.register(Character)
@@ -18,6 +20,8 @@ admin.site.register(Effect)
 admin.site.register(Condition)
 admin.site.register(Restriction)
 admin.site.register(CardEffectBinding)
+admin.site.register(CharacterPairSynergy)
+admin.site.register(CharacterRelationship)
 
 class CardEffectBindingInline(admin.TabularInline):
     model = CardEffectBinding

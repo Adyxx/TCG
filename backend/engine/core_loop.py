@@ -37,6 +37,10 @@ def select_user_deck(prompt):
     deck_index = int(input("Choose deck: "))
     return playable_decks[deck_index]
 
+def reset_passive_usage(player):
+    if hasattr(player, "_passive_usage"):
+        player._passive_usage.clear()
+
 def run_game():
     print("🎮 Starting test game...")
 
@@ -48,10 +52,21 @@ def run_game():
     player1 = Player(deck1.user.username, deck1)
     player2 = Player(deck2.user.username, deck2)
 
+    # Show full character info
+    for player in [player1, player2]:
+        print(f"\n🧙 {player.name} enters the game!")
+        if player.main_character:
+            print(f"  🧍 Main Character: {player.main_character.name} (Class: {player.main_character.class_type})")
+            if player.class_trait:
+                print(f"    🧬 Class Trait: {player.class_trait.get('description', 'No description')}")
+        if player.partner_character:
+            print(f"  🧑‍🤝‍🧑 Partner: {player.partner_character.name}")
+        print(f"  ❤️ Starting Health: {player.health}")
+        print(f"  📦 Deck size: {len(player.deck)} cards\n")
+
     game = GameState([player1, player2])
     current_player = game.current_player()
 
-    # DRAW PHASE
     for p in [player1, player2]:
         for _ in range(3):
             p.draw_card()
@@ -64,9 +79,19 @@ def run_game():
 
         current_player.draw_card() 
         execute_trigger(None, "on_turn_start", current_player)
+        reset_passive_usage(current_player)
 
+        for card in current_player.board:
+            card.tapped = False
+            if card.summoning_sickness:
+                card.summoning_sickness = False 
+                
         while True:
-            print(f"\n{current_player.name}'s hand: {[f'{i}: {card.name}' for i, card in enumerate(current_player.hand)]}")
+            print(f"\n📜 {current_player.name}'s hand:")
+            for i, card in enumerate(current_player.hand):
+                print(f"  {i}: {card.name} (Cost: {card.cost}, Power: {card.power}, Health: {card.health})")
+
+            print(f"🛡️ Board: {[card.name for card in current_player.board]}")
             command = input(">> Command (play <i> / attack / end): ").strip()
 
             if command.startswith("play"):

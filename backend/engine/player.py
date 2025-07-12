@@ -1,21 +1,26 @@
-from backend.models import Card
-
+import random
+from backend.models import Card, DeckCard
 
 class Player:
-    def __init__(self, name, health=20):
+    def __init__(self, name, deck_model):
         self.name = name
-        self.health = health
+        self.health = 20
         self.hand = []
-        self.deck = list(Card.objects.all()[:5])
+        self.deck = []
         self.graveyard = []
         self.board = []
         self.cards_played_this_turn = 0
+        self.energy = 0
+        self.deck_model = deck_model
 
-        self.draw_starting_hand()
+        self.prepare_deck()
 
-    def draw_starting_hand(self):
-        for _ in range(3):
-            self.draw_card()
+    def prepare_deck(self):
+        cards = []
+        for deck_card in self.deck_model.deck_cards.select_related("card"):
+            cards.extend([deck_card.card] * deck_card.quantity)
+        random.shuffle(cards)
+        self.deck = cards
 
     def draw_card(self):
         if self.deck:

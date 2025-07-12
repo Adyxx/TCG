@@ -26,6 +26,7 @@ class Deck(models.Model):
 
         card_counts = {}
         character_card_tracker = {}
+        character_card_found = set()
 
         for deck_card in self.deck_cards.select_related("card__character"):
             card = deck_card.card
@@ -47,18 +48,21 @@ class Deck(models.Model):
 
             card_counts[card.id] = card_counts.get(card.id, 0) + count
             if card_counts[card.id] > limit:
-                issues.append(
-                    f"{card.name} exceeds allowed limit of {limit} copies."
-                )
+                issues.append(f"{card.name} exceeds allowed limit of {limit} copies.")
 
             if card.is_character_card and card.character:
                 cid = card.character.id
                 if cid in character_card_tracker:
-                    issues.append(
-                        f"Multiple character cards for '{card.character.name}' in deck."
-                    )
+                    issues.append(f"Multiple character cards for '{card.character.name}' in deck.")
                 else:
                     character_card_tracker[cid] = True
+                    character_card_found.add(cid)
+
+        if self.character and self.character.id not in character_card_found:
+            issues.append(f"Deck is missing character card for '{self.character.name}'.")
+
+        if self.partner_character and self.partner_character.id not in character_card_found:
+            issues.append(f"Deck is missing character card for partner '{self.partner_character.name}'.")
 
         return issues
 

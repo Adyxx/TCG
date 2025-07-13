@@ -1,5 +1,6 @@
 from backend.engine.trigger_observer import trigger_observer
 from backend.registry.triggers import TRIGGER_REGISTRY
+from backend.registry.conditions import CONDITION_REGISTRY
 
 def register_card_triggers(card, owner):
     card.owner = owner
@@ -27,9 +28,31 @@ def register_card_triggers(card, owner):
             print(f"⏭️ Skipping trigger '{trigger_code}' – not runtime-registerable")
             continue
 
-        effect = builder(card=card, owner=owner, binding=binding)
-        trigger_observer.subscribe(event, effect)
-        card._registered_effects.append((event, effect))
+        base_effect = builder(card=card, owner=owner, binding=binding)
+
+        # === Wrap with condition if one exists ===
+        condition = binding.condition
+        if condition:
+            print(condition.script_reference)
+            condition_func = CONDITION_REGISTRY.get(condition.script_reference)
+            print(condition_func)
+            if not condition_func:
+                print(f"❌ Unknown condition '{condition.script_reference}' for {card.name}")
+                continue
+
+            def wrapped_effect(*args, **kwargs):
+                if condition_func(card):
+                    base_effect(*args, **kwargs)
+                else:
+                    print(f"🚫 Condition '{condition.script_reference}' failed for {card.name}, skipping effect.")
+
+            effect_to_register = wrapped_effect
+            print(f"🔗 {card.name}: Effect will run only if condition '{condition.script_reference}' passes.")
+        else:
+            effect_to_register = base_effect
+
+        trigger_observer.subscribe(event, effect_to_register)
+        card._registered_effects.append((event, effect_to_register))
 
         print(f"✅ {card.name} registered '{trigger_code}' to '{event}'")
 

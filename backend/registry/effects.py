@@ -45,11 +45,3 @@ EFFECT_REGISTRY = {
     },
 }
  
-'''
-EFFECT_REGISTRY = {
-    "apply_haste": apply_haste,
-    "draw_card": draw_card,
-    "self_hurt": self_hurt,
-    "override_deck_limit": override_deck_limit,
-}
-'''

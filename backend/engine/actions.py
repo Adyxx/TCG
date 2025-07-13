@@ -1,6 +1,7 @@
 
 from backend.engine.trigger_observer import trigger_observer
 from backend.engine.trigger_loader import unregister_card_triggers
+from backend.registry.effects import draw_card
 
 def play_card(player, index):
     if index < 0 or index >= len(player.hand):
@@ -54,9 +55,14 @@ def attack(attacker, defender):
     except ValueError:
         print("❌ Invalid input.")
         return
+    
 
     if target_idx == 0:
         print(f"💥 {attacker_card.name} attacks {defender.name} for {attacker_card.power} damage!")
+
+        trigger_observer.emit("on_attack", card=attacker_card, target=defender)
+        trigger_observer.emit("on_attacked", card=defender, attacker=attacker_card)
+
         defender.health -= attacker_card.power
         attacker_card.tapped = True
         print(f"❤️ {defender.name} now has {defender.health} HP.")
@@ -65,6 +71,9 @@ def attack(attacker, defender):
     elif 1 <= target_idx <= len(defender.board):
         target_card = defender.board[target_idx - 1]
         print(f"⚔️ {attacker_card.name} attacks {target_card.name}!")
+
+        trigger_observer.emit("on_attack", card=attacker_card, target=target_card)
+        trigger_observer.emit("on_attacked", card=target_card, attacker=attacker_card)
 
         target_card.damage_taken += attacker_card.power
         attacker_card.damage_taken += target_card.power
@@ -95,8 +104,25 @@ def attack(attacker, defender):
         return
 
 
-def end_turn(game_state):
-    current = game_state.current_player()
-    print(f"🔚 {current.name} ends their turn.")
-    #execute_trigger(None, "on_turn_end", current)
-    game_state.turn_index = 1 - game_state.turn_index
+def start_turn(player):
+    print(f"▶️ {player.name}'s turn begins.")
+
+    player.energy += 1
+    player._class_trait_uses_this_turn = 0
+    print(f"⚡ {player.name} gains 1 energy → {player.energy} total")
+
+    draw_card(player, value=1)
+
+    trigger_observer.emit("turn_started", player=player)
+    for card in player.board:
+        trigger_observer.emit("turn_started", card=card, player=player)
+
+    for card in player.board:
+        card.tapped = False
+        card.summoning_sickness = False
+
+def end_turn(player):
+    print(f"⏹ {player.name}'s turn ends.")
+    trigger_observer.emit("turn_ended", player=player)
+    for card in player.board:
+        trigger_observer.emit("turn_ended", card=card, player=player)

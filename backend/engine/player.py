@@ -54,15 +54,3 @@ class Player:
         names = [card.name for card in cards]
         for i, name in enumerate(names, 1):
             print(f"  {i:2}. {name}")
-
-    def draw_card(self):
-        if self.deck:
-            card = self.deck.pop(0)
-            card.owner = self
-            self.hand.append(card)
-            print(f"🃏 {self.name} drew {card.name}")
-        else:
-            print(f"⚠️ {self.name}'s deck is empty!")
-
-    def __str__(self):
-        return self.name

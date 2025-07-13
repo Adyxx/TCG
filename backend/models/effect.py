@@ -12,7 +12,7 @@ class Effect(models.Model):
 
     def get_executable(self):
         from backend.registry.effects import EFFECT_REGISTRY
-        func = EFFECT_REGISTRY.get(self.script_reference)
-        if not func:
+        effect_entry = EFFECT_REGISTRY.get(self.script_reference)
+        if not effect_entry:
             raise ImproperlyConfigured(f"No effect function found for script_reference '{self.script_reference}'")
-        return func
+        return effect_entry["func"], effect_entry["target"]

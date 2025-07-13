@@ -9,14 +9,10 @@ django.setup()
 
 from backend.engine.game_state import GameState
 from backend.engine.player import Player
-from backend.engine.actions import play_card, attack, end_turn
-#from backend.engine.trigger_exec import execute_trigger
-
-
-from django.contrib.auth import get_user_model
-from backend.models import DeckCard
-
+from backend.engine.actions import play_card, attack, end_turn, start_turn
 from backend.engine.trigger_loader import register_card_triggers
+from backend.registry.effects import draw_card
+from django.contrib.auth import get_user_model
 
 User = get_user_model()
 
@@ -74,23 +70,13 @@ def run_game():
     current_player = game.current_player()
 
     for p in [player1, player2]:
-        for _ in range(3):
-            p.draw_card()
+        draw_card(p, value=3)
+
 
     while not game.game_over:
         print(f"\n=== 🕒 {current_player.name}'s Turn ===")
 
-        current_player.energy += 1  
-        print(f"⚡ {current_player.name} gains 1 energy → {current_player.energy} total")
-
-        current_player.draw_card() 
-        #execute_trigger(None, "on_turn_start", current_player)
-        player._class_trait_uses_this_turn = 0
-
-        for card in current_player.board:
-            card.tapped = False
-            if card.summoning_sickness:
-                card.summoning_sickness = False 
+        start_turn(current_player)
 
         while True:
             print(f"\n📜 {current_player.name}'s hand:")
@@ -108,7 +94,8 @@ def run_game():
                 attack(current_player, game.opponent())
 
             elif command == "end":
-                end_turn(game)
+                end_turn(current_player)
+                game.turn_index = 1 - game.turn_index 
                 break
 
             else:

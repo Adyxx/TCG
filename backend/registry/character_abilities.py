@@ -16,8 +16,9 @@ def register_ability(name, *, type, description, cost=None, trigger=None, limit=
 
 @register_ability("fireball", type="active", description="Deal 3 damage to a target.", cost=2)
 def fireball(player, target):
-    target.take_damage(3)
+    pass
 
 @register_ability("healing_aura", type="passive", description="Heal 1 at start of turn", trigger="on_turn_start")
 def healing_aura(player):
-    player.heal(1)
+    print("heal?")
+    pass

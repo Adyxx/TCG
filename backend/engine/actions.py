@@ -107,10 +107,12 @@ def start_turn(player):
     print(f"▶️ {player.name}'s turn begins.")
 
     player.energy += 1
-    player._class_trait_uses_this_turn = 0
     print(f"⚡ {player.name} gains 1 energy → {player.energy} total")
 
     draw_card(player, value=1)
+
+    player._class_trait_uses_this_turn = 0
+    player._passive_uses_this_turn = 0
 
     trigger_observer.emit("turn_started", player=player)
     for card in player.board:

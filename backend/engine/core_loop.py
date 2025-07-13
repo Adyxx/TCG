@@ -15,8 +15,102 @@ from django.contrib.auth import get_user_model
 
 User = get_user_model()
 
+from backend.registry.class_traits import CLASS_TRAITS
+from backend.engine.trigger_observer import trigger_observer
+
+from backend.registry.character_abilities import CHARACTER_ABILITY_METADATA, CHARACTER_ABILITY_REGISTRY
+
+
+from backend.registry.triggers import TRIGGER_REGISTRY
+
+def register_passive_ability(player):
+    player._passive_uses_this_turn = 0
+
+    ref = player.main_character.passive_ability_ref
+    if not ref:
+        return
+
+    meta = CHARACTER_ABILITY_METADATA.get(ref)
+    func = CHARACTER_ABILITY_REGISTRY.get(ref)
+
+    if not meta or not func or meta["type"] != "passive":
+        print(f"⚠️ {ref} is not a valid passive ability.")
+        return
+
+    trigger_code = meta.get("trigger")
+    limit = meta.get("limit_per_turn")
+    if limit is None:
+        limit = 999
+
+
+    trigger_meta = TRIGGER_REGISTRY.get(trigger_code)
+    if not trigger_meta:
+        print(f"❌ Unknown trigger code '{trigger_code}' for passive '{ref}'")
+        return
+
+    event_name = trigger_meta["event"]
+    if not event_name:
+        print(f"⏭️ Passive ability '{ref}' uses trigger '{trigger_code}', which has no runtime event.")
+        return
+
+    def wrapped(**kwargs):
+        if player._passive_uses_this_turn >= limit:
+            print(f"🚫 {player.name}'s passive '{ref}' limit reached.")
+            return
+
+        print(f"✨ Passive ability '{ref}' triggered for {player.name}!")
+        func(player)
+        player._passive_uses_this_turn += 1
+
+    trigger_observer.subscribe(event_name, wrapped)
+    player.passive_ability = meta
+    print(f"🧠 Registered passive '{ref}' for {player.name} (event: {event_name})")
+
+def register_class_trait(player):
+    player._class_trait_uses_this_turn = 0
+
+    trait = CLASS_TRAITS.get(player.main_character.class_type)
+    if not trait:
+        print(f"❌ No class trait found for class: {player.main_character.class_type}")
+        return
+
+    trigger_code = trait.get("trigger")
+    limit = trait.get("limit_per_turn")
+    effect = trait.get("effect")
+
+    if not trigger_code or not effect:
+        print(f"⏭️ Skipping invalid class trait for {player.name}")
+        return
+
+    trigger_meta = TRIGGER_REGISTRY.get(trigger_code)
+    if not trigger_meta:
+        print(f"❌ Unknown trigger code '{trigger_code}' for class trait")
+        return
+
+    event_name = trigger_meta["event"]
+    if not event_name:
+        print(f"⏭️ Class trait uses trigger '{trigger_code}', which has no runtime event.")
+        return
+
+    def wrapped_effect(**kwargs):
+        if player._class_trait_uses_this_turn >= limit:
+            print(f"🚫 {player.name}'s class trait limit reached this turn.")
+            return
+
+        print(f"🧬 {player.name}'s class trait activated!")
+
+        effect(player)
+        player._class_trait_uses_this_turn += 1
+
+    trigger_observer.subscribe(event_name, wrapped_effect)
+    player.class_trait = trait
+    print(f"🔧 Registered class trait for {player.name} (event: {event_name})")
+
+
 def initialize_triggers(player1, player2):
     for player in [player1, player2]:
+        register_class_trait(player)
+        register_passive_ability(player)
         for card in player.deck + player.hand + player.board:
             register_card_triggers(card, owner=player)
 
@@ -82,7 +176,7 @@ def run_game():
                 print(f"  {i}: {card.name} (Cost: {card.cost}, Power: {card.power}, Health: {card.health})")
 
             print(f"🛡️ Board: {[card.name for card in current_player.board]}")
-            command = input(">> Command (play <i> / attack / end): ").strip()
+            command = input(">> Command (play <i> / attack / use / end): ").strip()
 
             if command.startswith("play"):
                 _, idx = command.split()
@@ -95,6 +189,22 @@ def run_game():
                 end_turn(current_player)
                 game.turn_index = 1 - game.turn_index 
                 break
+
+            elif command == "use":
+                _, ability_ref = command.split()
+                ability_func = CHARACTER_ABILITY_REGISTRY.get(ability_ref)
+                meta = CHARACTER_ABILITY_METADATA.get(ability_ref)
+                if not ability_func:
+                    print("❌ Unknown ability.")
+                    continue
+
+                if player.energy < meta["cost"]:
+                    print(f"🚫 Not enough energy (needs {meta['cost']})")
+                    continue
+
+                ability_func(player)
+                player.energy -= meta["cost"]
+                print(f"🔥 Used {ability_ref} (Remaining energy: {player.energy})")
 
             else:
                 print("❓ Unknown command.")

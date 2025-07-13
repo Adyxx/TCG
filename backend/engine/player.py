@@ -50,7 +50,9 @@ class Player:
         random.shuffle(cards)
         self.deck = cards
 
+        '''
         print(f"📦 Deck for {self.name} prepared with {len(cards)} cards:")
         names = [card.name for card in cards]
         for i, name in enumerate(names, 1):
             print(f"  {i:2}. {name}")
+        '''

@@ -8,7 +8,6 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "frontend_web.frontend_web.setti
 django.setup()
 
 from backend.engine.game_state import GameState
-from backend.engine.player import Player
 from backend.engine.actions import play_card, attack, end_turn, start_turn
 from backend.engine.trigger_loader import register_card_triggers
 from backend.registry.effects import draw_card
@@ -54,7 +53,6 @@ def run_game():
 
     initialize_triggers(player1, player2)
 
-    # Show full character info
     for player in [player1, player2]:
         print(f"\n🧙 {player.name} enters the game!")
         if player.main_character:

@@ -1,6 +1,7 @@
 from django import forms
 from django.contrib import admin
 from django.utils.html import format_html, format_html_join
+from django.db import models 
 
 from backend.models import (
     Card,
@@ -47,7 +48,6 @@ class CharacterAdmin(admin.ModelAdmin):
 
 
 admin.site.register(Character, CharacterAdmin)
-admin.site.register(Trigger)
 admin.site.register(Effect)
 admin.site.register(Condition)
 admin.site.register(Restriction)
@@ -55,6 +55,10 @@ admin.site.register(CardEffectBinding)
 admin.site.register(CharacterPairSynergy)
 admin.site.register(CharacterRelationship)
 
+@admin.register(Trigger)
+class TriggerAdmin(admin.ModelAdmin):
+    list_display = ['script_reference', 'description', 'zone']
+    list_filter = ['zone']
 
 class CardEffectBindingInline(admin.TabularInline):
     model = CardEffectBinding

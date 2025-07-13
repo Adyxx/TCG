@@ -10,13 +10,20 @@ django.setup()
 from backend.engine.game_state import GameState
 from backend.engine.player import Player
 from backend.engine.actions import play_card, attack, end_turn
-from backend.engine.trigger_exec import execute_trigger
+#from backend.engine.trigger_exec import execute_trigger
 
 
 from django.contrib.auth import get_user_model
 from backend.models import DeckCard
 
+from backend.engine.trigger_loader import register_card_triggers
+
 User = get_user_model()
+
+def initialize_triggers(player1, player2):
+    for player in [player1, player2]:
+        for card in player.deck + player.hand + player.board:
+            register_card_triggers(card, owner=player)
 
 def select_user_deck(prompt):
     print(f"\n🔍 {prompt}")
@@ -49,6 +56,8 @@ def run_game():
     player1 = Player(deck1.user.username, deck1)
     player2 = Player(deck2.user.username, deck2)
 
+    initialize_triggers(player1, player2)
+
     # Show full character info
     for player in [player1, player2]:
         print(f"\n🧙 {player.name} enters the game!")
@@ -75,7 +84,7 @@ def run_game():
         print(f"⚡ {current_player.name} gains 1 energy → {current_player.energy} total")
 
         current_player.draw_card() 
-        execute_trigger(None, "on_turn_start", current_player)
+        #execute_trigger(None, "on_turn_start", current_player)
         player._class_trait_uses_this_turn = 0
 
         for card in current_player.board:

@@ -72,8 +72,6 @@ def attack(attacker, defender):
         target_card = defender.board[target_idx - 1]
         print(f"⚔️ {attacker_card.name} attacks {target_card.name}!")
 
-        print(f"📤 Emitting 'on_attack' for card object {id(attacker_card)}: {attacker_card.name}")
-
         trigger_observer.emit("card_attacked", card=attacker_card, target=target_card)
         #trigger_observer.emit("on_attacked", card=target_card, attacker=attacker_card)
 
@@ -97,7 +95,6 @@ def attack(attacker, defender):
             attacker_card.tapped = True
 
         for dead_card in death_queue:
-            unregister_card_triggers(dead_card)
             trigger_observer.emit("card_died", died_card=dead_card, owner=dead_card.owner)
 
 

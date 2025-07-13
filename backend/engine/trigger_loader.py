@@ -30,24 +30,24 @@ def register_card_triggers(card, owner):
 
         base_effect = builder(card=card, owner=owner, binding=binding)
 
-        # === Wrap with condition if one exists ===
         condition = binding.condition
         if condition:
-            print(condition.script_reference)
-            condition_func = CONDITION_REGISTRY.get(condition.script_reference)
+            script_reference = condition.script_reference  # ✅ capture early
+            print(script_reference)
+            condition_func = CONDITION_REGISTRY.get(script_reference)
             print(condition_func)
             if not condition_func:
-                print(f"❌ Unknown condition '{condition.script_reference}' for {card.name}")
+                print(f"❌ Unknown condition '{script_reference}' for {card.name}")
                 continue
 
             def wrapped_effect(*args, **kwargs):
                 if condition_func(card):
                     base_effect(*args, **kwargs)
                 else:
-                    print(f"🚫 Condition '{condition.script_reference}' failed for {card.name}, skipping effect.")
+                    print(f"🚫 Condition '{script_reference}' failed for {card.name}, skipping effect.")
 
             effect_to_register = wrapped_effect
-            print(f"🔗 {card.name}: Effect will run only if condition '{condition.script_reference}' passes.")
+            print(f"🔗 {card.name}: Effect will run only if condition '{script_reference}' passes.")
         else:
             effect_to_register = base_effect
 

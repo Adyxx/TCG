@@ -8,7 +8,7 @@ class GameCard:
         self.health = card_model.health
 
         self.owner = None
-        self.zone = None  # "hand", "board", "graveyard", etc.
+        self.zone = None
         self.summoning_sickness = True
         self.tapped = False
         self.temp_buffs = []

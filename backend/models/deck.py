@@ -39,12 +39,14 @@ class Deck(models.Model):
                 if effect_name == "override_deck_limit":
                     try:
                         new_limit = int(binding.value)
-                        effect_func = EFFECT_REGISTRY.get(effect_name)
-                        if effect_func:
-                            effect_func(card, new_limit)
+                        effect_meta = EFFECT_REGISTRY.get(effect_name)
+                        if effect_meta:
+                            func = effect_meta["func"]
+                            func(card, new_limit)
                             limit = getattr(card, 'override_limit', limit)
                     except (ValueError, TypeError):
                         issues.append(f"Invalid override_deck_limit value on card '{card.name}'")
+
 
             card_counts[card.id] = card_counts.get(card.id, 0) + count
             if card_counts[card.id] > limit:

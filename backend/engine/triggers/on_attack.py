@@ -1,12 +1,20 @@
-
 def build(card, owner, binding):
-    effect_func = binding.effect.get_executable()
+    effect_func, target = binding.effect.get_executable()
     value = binding.value
 
     def effect(**kwargs):
         if kwargs.get("card") != card:
             return
         print(f"⚔️ [on_attack] Triggering for {card.name}")
-        effect_func(card, value) if value is not None else effect_func(card)
+
+        target_obj = {
+            "card": card,
+            "player": owner
+        }[target]
+
+        if value is not None:
+            effect_func(target_obj, value)
+        else:
+            effect_func(target_obj)
 
     return effect

@@ -60,8 +60,8 @@ def attack(attacker, defender):
     if target_idx == 0:
         print(f"💥 {attacker_card.name} attacks {defender.name} for {attacker_card.power} damage!")
 
-        trigger_observer.emit("on_attack", card=attacker_card, target=defender)
-        trigger_observer.emit("on_attacked", card=defender, attacker=attacker_card)
+        trigger_observer.emit("card_attacked", card=attacker_card, target=defender)
+        #trigger_observer.emit("on_attacked", card=defender, attacker=attacker_card)
 
         defender.health -= attacker_card.power
         attacker_card.tapped = True
@@ -72,8 +72,10 @@ def attack(attacker, defender):
         target_card = defender.board[target_idx - 1]
         print(f"⚔️ {attacker_card.name} attacks {target_card.name}!")
 
-        trigger_observer.emit("on_attack", card=attacker_card, target=target_card)
-        trigger_observer.emit("on_attacked", card=target_card, attacker=attacker_card)
+        print(f"📤 Emitting 'on_attack' for card object {id(attacker_card)}: {attacker_card.name}")
+
+        trigger_observer.emit("card_attacked", card=attacker_card, target=target_card)
+        #trigger_observer.emit("on_attacked", card=target_card, attacker=attacker_card)
 
         target_card.damage_taken += attacker_card.power
         attacker_card.damage_taken += target_card.power

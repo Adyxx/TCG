@@ -21,9 +21,15 @@ class Player:
         if self.health == 0:
             self.health = 20 
 
-        self.class_trait = None
         if self.main_character and self.main_character.class_type in CLASS_TRAITS:
-            self.class_trait = CLASS_TRAITS[self.main_character.class_type]
+            trait_data = CLASS_TRAITS[self.main_character.class_type]
+            self.class_trait = {
+                "name": self.main_character.class_type,
+                "description": trait_data["description"],
+                "trigger": trait_data["trigger"],
+                "uses_per_turn": trait_data["limit_per_turn"],
+                "function": trait_data["effect"],
+            }
             self._class_trait_uses_this_turn = 0
 
         self.hand = []

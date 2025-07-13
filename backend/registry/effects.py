@@ -8,12 +8,11 @@ def draw_card(card, value=1):
         amount = 1
     print(f"Drawing {amount} card(s) because of {card.name}'s ability.")
 
-def self_hurt(card, value=2):
-    try:
-        damage = int(value)
-    except (ValueError, TypeError):
-        damage = 2
+def self_hurt(card, damage):
     player = card.owner
+    if player is None:
+        print(f"❌ Cannot self-hurt: card.owner is None for {card.name}")
+        return
     player.health -= damage
     print(f"Dealing {damage} points of damage to your hero because of {card.name}'s ability! Health is now {player.health}")
 

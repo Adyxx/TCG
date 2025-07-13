@@ -1,5 +1,6 @@
-from backend.engine.trigger_exec import execute_trigger
 
+from backend.engine.trigger_observer import trigger_observer
+from backend.engine.trigger_loader import unregister_card_triggers
 
 def play_card(player, index):
     if index < 0 or index >= len(player.hand):
@@ -20,8 +21,10 @@ def play_card(player, index):
     player.energy -= cost
 
     print(f"▶️ {player.name} plays {card.name} for {cost} energy (Remaining: {player.energy})")
-    execute_trigger(card, "on_play")
+
+    trigger_observer.emit("card_played", card=card, owner=player)
     player.cards_played_this_turn += 1
+
 
 
 def attack(attacker, defender):
@@ -57,37 +60,43 @@ def attack(attacker, defender):
         defender.health -= attacker_card.power
         attacker_card.tapped = True
         print(f"❤️ {defender.name} now has {defender.health} HP.")
+        return
+
     elif 1 <= target_idx <= len(defender.board):
         target_card = defender.board[target_idx - 1]
         print(f"⚔️ {attacker_card.name} attacks {target_card.name}!")
 
-        # Combat resolution
         target_card.damage_taken += attacker_card.power
         attacker_card.damage_taken += target_card.power
 
-        # Check if target dies
+        death_queue = []
+
         if target_card.damage_taken >= target_card.health:
             defender.board.remove(target_card)
             defender.graveyard.append(target_card)
+            death_queue.append(target_card)
             print(f"💀 {target_card.name} is destroyed!")
 
-        # Check if attacker dies
         if attacker_card.damage_taken >= attacker_card.health:
             attacker.board.remove(attacker_card)
             attacker.graveyard.append(attacker_card)
+            death_queue.append(attacker_card)
             print(f"💀 {attacker_card.name} is destroyed!")
         else:
             attacker_card.tapped = True
+
+        for dead_card in death_queue:
+            unregister_card_triggers(dead_card)
+            trigger_observer.emit("card_died", died_card=dead_card, owner=dead_card.owner)
+
+
     else:
         print("❌ Invalid target.")
         return
-
-    execute_trigger(attacker_card, "on_attack", attacker)
-
 
 
 def end_turn(game_state):
     current = game_state.current_player()
     print(f"🔚 {current.name} ends their turn.")
-    execute_trigger(None, "on_turn_end", current)
+    #execute_trigger(None, "on_turn_end", current)
     game_state.turn_index = 1 - game_state.turn_index

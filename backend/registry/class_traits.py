@@ -7,7 +7,7 @@ CLASS_TRAITS = {
     },
     "WIZARD": {
         "description": "Discard a card to gain +1 temporary energy.",
-        "trigger": "on_card_discard",
+        "trigger": "on_discard",
         "limit_per_turn": 2,
         "effect": lambda player: setattr(player, "energy", player.energy + 1)
     },

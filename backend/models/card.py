@@ -1,5 +1,5 @@
 from django.db import models
-from .character import Character
+from .character import Character, Subtype
 from django.core.exceptions import ValidationError
 
 class Card(models.Model):
@@ -19,11 +19,12 @@ class Card(models.Model):
     ]
 
     name = models.CharField(max_length=100)
+    image = models.ImageField(upload_to='cards/', blank=True, null=True)
     cost = models.IntegerField()
     rarity = models.CharField(max_length=20, choices=RARITY_CHOICES, default="COMMON")
     card_type = models.CharField(max_length=20, choices=CARD_TYPE_CHOICES)
     color = models.CharField(max_length=20)
-    subtype = models.CharField(max_length=50, blank=True)
+    subtypes = models.ManyToManyField(Subtype, related_name='cards', blank=True)
 
     power = models.IntegerField(null=True, blank=True)
     health = models.IntegerField(null=True, blank=True)

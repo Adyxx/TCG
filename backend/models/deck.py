@@ -1,8 +1,8 @@
-from django.core.exceptions import ValidationError
 from django.db import models
 from .users import User
 from .character import Character
 from backend.registry.effects import EFFECT_REGISTRY
+from backend.registry.deck_restrictions import DECK_RESTRICTION_REGISTRY
 
 class Deck(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='decks')
@@ -60,12 +60,37 @@ class Deck(models.Model):
                     character_card_tracker[cid] = True
                     character_card_found.add(cid)
 
+            if card.is_character_exclusive and card.character:
+                allowed_char_ids = {self.character.id if self.character else None}
+                if self.partner_character:
+                    allowed_char_ids.add(self.partner_character.id)
+
+                if card.character.id not in allowed_char_ids:
+                    issues.append(
+                        f"{card.name} is exclusive to '{card.character.name}', who is not part of this deck."
+                    )
+                    
+
         if self.character and self.character.id not in character_card_found:
             issues.append(f"Deck is missing character card for '{self.character.name}'.")
 
         if self.partner_character and self.partner_character.id not in character_card_found:
             issues.append(f"Deck is missing character card for partner '{self.partner_character.name}'.")
 
+        if self.character and self.character.deck_restriction_ref:
+            func = DECK_RESTRICTION_REGISTRY.get(self.character.deck_restriction_ref)
+            if func:
+                is_valid, reason = func(self)
+                if not is_valid:
+                    issues.append(f"Main character deck restriction: {reason}")
+
+        if self.partner_character and self.partner_character.deck_restriction_ref:
+            func = DECK_RESTRICTION_REGISTRY.get(self.partner_character.deck_restriction_ref)
+            if func:
+                is_valid, reason = func(self)
+                if not is_valid:
+                    issues.append(f"Partner deck restriction: {reason}")
+                    
         return issues
 
     def clean(self):

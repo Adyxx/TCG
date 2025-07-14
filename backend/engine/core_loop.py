@@ -8,7 +8,7 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "frontend_web.frontend_web.setti
 django.setup()
 
 from backend.engine.game_state import GameState
-from backend.engine.actions import play_card, attack, end_turn, start_turn
+from backend.engine.actions import play_card, attack, end_turn, start_turn, choose_target
 from backend.engine.trigger_loader import register_card_triggers
 from backend.registry.effects import draw_card
 from django.contrib.auth import get_user_model
@@ -145,6 +145,9 @@ def run_game():
     player1 = Player(deck1.user.username, deck1)
     player2 = Player(deck2.user.username, deck2)
 
+    player1.opponent = player2
+    player2.opponent = player1
+
     initialize_triggers(player1, player2)
 
     for player in [player1, player2]:
@@ -190,20 +193,42 @@ def run_game():
                 game.turn_index = 1 - game.turn_index 
                 break
 
-            elif command == "use":
-                _, ability_ref = command.split()
-                ability_func = CHARACTER_ABILITY_REGISTRY.get(ability_ref)
+            elif command.strip() == "use":
+                ability_ref = player.main_character.active_ability_ref
                 meta = CHARACTER_ABILITY_METADATA.get(ability_ref)
-                if not ability_func:
-                    print("❌ Unknown ability.")
+                func = CHARACTER_ABILITY_REGISTRY.get(ability_ref)
+
+                if not ability_ref or not meta or not func:
+                    print("❌ Your character has no active ability.")
                     continue
 
-                if player.energy < meta["cost"]:
-                    print(f"🚫 Not enough energy (needs {meta['cost']})")
+                if meta["type"] != "active":
+                    print("❌ Your character has no *active* ability.")
                     continue
 
-                ability_func(player)
-                player.energy -= meta["cost"]
+                cost = meta.get("cost", 0)
+                if player.energy < cost:
+                    print(f"🚫 Not enough energy to use {ability_ref} (costs {cost}, you have {player.energy})")
+                    continue
+
+                print("\n🧙 Active Abilities:")
+                print("  0: Cancel")
+                print(f"  1: {ability_ref} — {meta['description']} (Cost: {cost})")
+
+                choice = input("Select ability: ").strip()
+                if choice != "1":
+                    print("↩️ Cancelled.")
+                    continue
+
+                if meta.get("needs_target"):
+                    target = choose_target(player.opponent)
+                    if not target:
+                        continue
+                    func(player, target)
+                else:
+                    func(player)
+
+                player.energy -= cost
                 print(f"🔥 Used {ability_ref} (Remaining energy: {player.energy})")
 
             else:

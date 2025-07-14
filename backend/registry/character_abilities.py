@@ -1,7 +1,9 @@
+from backend.engine.actions import resolve_damage, resolve_heal, DamageType
+
 CHARACTER_ABILITY_REGISTRY = {}
 CHARACTER_ABILITY_METADATA = {}
 
-def register_ability(name, *, type, description, cost=None, trigger=None, limit=None, needs_target=False):
+def register_ability(name, *, type, description, cost=None, trigger=None, limit=None, needs_target=False, effect_type=None, target_spec=None):
     def wrapper(func):
         CHARACTER_ABILITY_REGISTRY[name] = func
         CHARACTER_ABILITY_METADATA[name] = {
@@ -11,17 +13,34 @@ def register_ability(name, *, type, description, cost=None, trigger=None, limit=
             "trigger": trigger,
             "limit_per_turn": limit,
             "needs_target": needs_target,
+            "effect_type": effect_type,
+            "target_spec": target_spec,
         }
         return func
     return wrapper
 
-@register_ability("fireball", type="active", description="Deal 3 damage to a target.", cost=2, needs_target=True)
-def fireball(player, target):
-    print(f"💥 {player.name} casts Fireball on {target.name}!")
-    target.health -= 3
-    print(f"🩸 {target.name} now has {target.health} HP.")
 
-@register_ability("healing_aura", type="passive", description="Heal 1 at start of turn", trigger="on_turn_start")
+@register_ability(
+    "fireball",
+    type="active",
+    description="Deal 3 damage to a target.",
+    cost=2,
+    needs_target=True,
+    effect_type={"damage": "single"},
+    target_spec="enemy:board_or_hero"
+)
+def fireball(player, target):
+    resolve_damage(source=player, target=target, amount=3, damage_type=DamageType.ABILITY)
+
+
+@register_ability(
+    "healing_aura",
+    type="passive",
+    description="Heal 1 at start of turn",
+    limit=1,
+    trigger="on_turn_start",
+    effect_type={"heal": "self"},
+    target_spec="self"
+)
 def healing_aura(player):
-    print(f"💚 {player.name} heals for 1 HP.")
-    player.health += 1
+    resolve_heal(source=player, target=player, amount=1)

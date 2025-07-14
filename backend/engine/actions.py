@@ -26,7 +26,25 @@ def play_card(player, index):
     trigger_observer.emit("card_played", card=card, owner=player)
     player.cards_played_this_turn += 1
 
+def choose_target(defender):
+    print("\n🎯 Choose target:")
+    print(f"  0: Attack {defender.name} directly (HP: {defender.health})")
+    for i, card in enumerate(defender.board):
+        print(f"  {i+1}: {card.name} (Power: {card.power}, Health: {card.health - card.damage_taken})")
 
+    try:
+        target_idx = int(input("Choose target ID: "))
+    except ValueError:
+        print("❌ Invalid input.")
+        return None
+
+    if target_idx == 0:
+        return defender
+    elif 1 <= target_idx <= len(defender.board):
+        return defender.board[target_idx - 1]
+    else:
+        print("❌ Invalid target.")
+        return None
 
 def attack(attacker, defender):
     attackers = [card for card in attacker.board if not card.summoning_sickness and not card.tapped and card.power > 0]
@@ -107,10 +125,12 @@ def start_turn(player):
     print(f"▶️ {player.name}'s turn begins.")
 
     player.energy += 1
-    player._class_trait_uses_this_turn = 0
     print(f"⚡ {player.name} gains 1 energy → {player.energy} total")
 
     draw_card(player, value=1)
+
+    player._class_trait_uses_this_turn = 0
+    player._passive_uses_this_turn = 0
 
     trigger_observer.emit("turn_started", player=player)
     for card in player.board:

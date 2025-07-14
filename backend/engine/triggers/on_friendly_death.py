@@ -6,22 +6,22 @@ def build(card, owner, binding):
     def effect(**kwargs):
         died_card = kwargs.get("died_card")
         if died_card is None:
-            print(f"❌ [on_friendly_death] No died_card provided.")
+            #print(f"❌ [on_friendly_death] No died_card provided.")
             return
 
-        print(f"🧪 [on_friendly_death] Checking for {card.name}")
-        print(f"   🪦 Died: {died_card.name} | Owner: {died_card.owner.name} | Zone: {died_card.zone}")
-        print(f"   🎯 Expected owner: {owner.name}, Zone: {expected_zone or 'ANY'}")
+        #print(f"🧪 [on_friendly_death] Checking for {card.name}")
+        #print(f"   🪦 Died: {died_card.name} | Owner: {died_card.owner.name} | Zone: {died_card.zone}")
+        #print(f"   🎯 Expected owner: {owner.name}, Zone: {expected_zone or 'ANY'}")
 
         if died_card.owner != owner:
-            print(f"❌ Not a friendly death.")
+            #print(f"❌ Not a friendly death.")
             return
 
         if expected_zone and card.zone != expected_zone:
-            print(f"❌ {card.name} not in expected zone: {expected_zone} (is in {card.zone})")
+            #print(f"❌ {card.name} not in expected zone: {expected_zone} (is in {card.zone})")
             return
 
-        print(f"✅ [on_friendly_death] Triggering effect for {card.name}")
+        #print(f"✅ [on_friendly_death] Triggering effect for {card.name}")
 
         target_obj = {
             "card": card,

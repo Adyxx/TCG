@@ -5,7 +5,7 @@ def build(card, owner, binding):
     def effect(**kwargs):
         if kwargs.get("card") != card:
             return
-        print(f"⌛ [on_turn_end] Triggering for {card.name}")
+        #print(f"⌛ [on_turn_end] Triggering for {card.name}")
         
         target_obj = {
             "card": card,

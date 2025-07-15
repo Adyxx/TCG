@@ -1,7 +1,6 @@
 from django import forms
 from django.contrib import admin
 from django.utils.html import format_html
-from django.db import models 
 
 from backend.models import (
     Card,
@@ -18,11 +17,12 @@ from backend.models import (
     Subtype,
 )
 
-from backend.registry.character_abilities import CHARACTER_ABILITY_METADATA
-from backend.registry.deck_restrictions import DECK_RESTRICTION_REGISTRY
-from backend.registry.partner_abilities import PARTNER_ABILITY_REGISTRY
-from backend.registry.solo_abilities import SOLO_BONUS_REGISTRY
 
+from backend.registry.deck_restrictions import DECK_RESTRICTION_REGISTRY
+
+from backend.registry.character_abilities import CHARACTER_ABILITIES
+from backend.registry.partner_abilities import PARTNER_ABILITIES
+from backend.registry.solo_abilities import SOLO_ABILITIES
 
 ### ---- Character Admin Form ----
 
@@ -30,7 +30,7 @@ class CharacterAdminForm(forms.ModelForm):
     def _get_filtered_choices(ability_type):
         return [("", "— None —")] + [
             (name, name)
-            for name, meta in CHARACTER_ABILITY_METADATA.items()
+            for name, meta in CHARACTER_ABILITIES.items()
             if meta["type"] == ability_type
         ]
 
@@ -41,12 +41,12 @@ class CharacterAdminForm(forms.ModelForm):
 
     def _get_partner_ability_choices():
         return [("", "— None —")] + [
-            (name, name) for name in PARTNER_ABILITY_REGISTRY.keys()
+            (name, name) for name in PARTNER_ABILITIES.keys()
         ]
 
     def _get_solo_bonus_choices():
         return [("", "— None —")] + [
-            (name, name) for name in SOLO_BONUS_REGISTRY.keys()
+            (name, name) for name in SOLO_ABILITIES.keys()
         ]
 
     passive_ability_ref = forms.ChoiceField(

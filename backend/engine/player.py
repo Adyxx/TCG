@@ -1,9 +1,9 @@
 import random
-import copy
-from backend.models import DeckCard
 from backend.registry.class_traits import CLASS_TRAITS
+from backend.registry.effects import draw_card
+from backend.engine.trigger_observer import trigger_observer
 from .game_card import GameCard
-
+from backend.engine.trigger_loader import reset_player_abilities
 
 class Player:
     def __init__(self, name, deck_model):
@@ -19,27 +19,32 @@ class Player:
         if self.partner_character:
             self.health += self.partner_character.partner_hp or 0
         if self.health == 0:
-            self.health = 20 
+            self.health = 20
 
-        if self.main_character and self.main_character.class_type in CLASS_TRAITS:
-            trait_data = CLASS_TRAITS[self.main_character.class_type]
-            self.class_trait = {
-                "name": self.main_character.class_type,
-                "description": trait_data["description"],
-                "trigger": trait_data["trigger"],
-                "uses_per_turn": trait_data["limit_per_turn"],
-                "function": trait_data["effect"],
-            }
-            self._class_trait_uses_this_turn = 0
+        self.cooldowns = {}
+        self.turn_usage = {}
+        
+        if self.main_character:
+            class_trait_ref = self.main_character.class_type
+            meta = CLASS_TRAITS.get_metadata(class_trait_ref)
+            func = CLASS_TRAITS.get_function(class_trait_ref)
 
-        self._partner_uses_this_turn = 0
-        self._partner_turns_since_reset = 0
+            if meta and func:
+                self.class_trait = {
+                    "name": class_trait_ref,
+                    "description": meta["description"],
+                    "trigger": meta["trigger"],
+                    "condition": meta.get("condition"),
+                    "cooldown": meta.get("cooldown"),
+                    "function": func,
+                }
+
         self.hand = []
         self.deck = []
         self.graveyard = []
         self.board = []
         self.cards_played_this_turn = 0
-        self.turns_taken = 0
+        self.turn_count = 0
         self.energy = 0
 
         self.prepare_deck()
@@ -52,3 +57,40 @@ class Player:
                 cards.append(GameCard(deck_card.card))
         random.shuffle(cards)
         self.deck = cards
+
+
+    def start_turn(self):
+        print(f"▶️ {self.name}'s turn begins.")
+        self.energy += 1
+        print(f"⚡ {self.name} gains 1 energy → {self.energy} total")
+
+        draw_card(self, value=1)
+
+        trigger_observer.emit("turn_started", player=self)
+
+        for card in self.board:
+            trigger_observer.emit("turn_started", card=card, player=self)
+            card.tapped = False
+            card.summoning_sickness = False
+
+        self.turn_count += 1
+        self.cards_played_this_turn = 0
+
+
+    def tick_cooldowns(self):
+        for ref in list(self.cooldowns):
+            self.cooldowns[ref] = max(0, self.cooldowns[ref] - 1)
+
+
+    def end_turn(self):
+        print(f"⏹ {self.name}'s turn ends.")
+        trigger_observer.emit("turn_ended", player=self)
+
+        self.tick_cooldowns()
+
+        ability = getattr(self, "partner_ability", None)
+        if ability and ability.get("remaining_cooldown", 0) > 0:
+            ability["remaining_cooldown"] -= 1
+
+        for card in self.board:
+            trigger_observer.emit("turn_ended", card=card, player=self)

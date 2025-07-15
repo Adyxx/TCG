@@ -1,26 +1,9 @@
+from backend.registry._base import AbilityRegistry
 from backend.engine.actions import resolve_damage, resolve_heal, DamageType
 
-CHARACTER_ABILITY_REGISTRY = {}
-CHARACTER_ABILITY_METADATA = {}
+CHARACTER_ABILITIES = AbilityRegistry()
 
-def register_ability(name, *, type, description, cost=None, trigger=None, limit=None, needs_target=False, effect_type=None, target_spec=None):
-    def wrapper(func):
-        CHARACTER_ABILITY_REGISTRY[name] = func
-        CHARACTER_ABILITY_METADATA[name] = {
-            "type": type,
-            "description": description,
-            "cost": cost,
-            "trigger": trigger,
-            "limit_per_turn": limit,
-            "needs_target": needs_target,
-            "effect_type": effect_type,
-            "target_spec": target_spec,
-        }
-        return func
-    return wrapper
-
-
-@register_ability(
+@CHARACTER_ABILITIES.register(
     "fireball",
     type="active",
     description="Deal 3 damage to a target.",
@@ -32,13 +15,12 @@ def register_ability(name, *, type, description, cost=None, trigger=None, limit=
 def fireball(player, target):
     resolve_damage(source=player, target=target, amount=3, damage_type=DamageType.ABILITY)
 
-
-@register_ability(
+@CHARACTER_ABILITIES.register(
     "healing_aura",
     type="passive",
-    description="Heal 1 at start of turn",
-    limit=1,
+    description="Heal 1 at start of turn.",
     trigger="on_turn_start",
+    condition="has_not_triggered_this_turn",
     effect_type={"heal": "self"},
     target_spec="self"
 )

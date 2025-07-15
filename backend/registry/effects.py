@@ -1,6 +1,4 @@
 
-
-
 def apply_haste(card):
     print(f"{card.name} gains Haste!")
 

@@ -1,18 +1,52 @@
-
 CONDITION_REGISTRY = {}
 
-def owner_below_10_health(card):
-    if not hasattr(card, "owner") or not card.owner:
-        #print(f"❌ owner_below_10: Card '{card.name}' has no owner!")
-        return False
+def register_condition(name):
+    def decorator(func):
+        CONDITION_REGISTRY[name] = func
+        return func
+    return decorator
 
-    result = card.owner.health < 10
-    #print(f"🔍 owner_below_10: {card.name} owner's HP = {card.owner.health} → {result}")
-    return result
+def evaluate_condition(name, subject, param=None, ref=None):
+    func = CONDITION_REGISTRY.get(name)
+    if not func:
+        raise ValueError(f"Unknown condition: {name}")
+    return func(subject, param=param, ref=ref)
 
+def get_player(subject):
+    return subject.owner if hasattr(subject, "owner") else subject
 
-def played_2_cards_this_turn(card):
+@register_condition("is_players_first_turn")
+def is_players_first_turn(subject, param=None, ref=None):
+    if hasattr(subject, "owner"):
+        subject = subject.owner
+    return getattr(subject, "turn_count", -1) == 0
+
+@register_condition("owner_below_10_health")
+def owner_below_10_health(card, param=None, ref=None):
+    return hasattr(card, "owner") and card.owner.health < 10
+
+@register_condition("played_2_this_turn")
+def played_2_cards_this_turn(card, param=None, ref=None):
     return getattr(card.owner, "cards_played_this_turn", 0) >= 2
 
-CONDITION_REGISTRY["owner_below_10_health"] = owner_below_10_health
-CONDITION_REGISTRY["played_2_this_turn"] = played_2_cards_this_turn
+@register_condition("cooldown_ready")
+def cooldown_ready(player, param=None, ref=None):
+    return player.cooldowns.get(ref, 0) <= 0
+
+@register_condition("has_not_triggered_this_turn")
+def has_not_triggered_this_turn(subject, param=None, ref=None):
+    if hasattr(subject, "turn_usage"):
+        return subject.turn_usage.get(ref, 0) == 0
+    elif hasattr(subject, "owner") and hasattr(subject.owner, "turn_usage"):
+        return subject.owner.turn_usage.get(ref, 0) == 0
+    else:
+        return False
+
+@register_condition("is_friendly_turn")
+def is_friendly_turn(subject, param=None, ref=None):
+    player = get_player(subject)
+    return getattr(player, "turn_count", -1) == 0
+
+'''
+later probably expand on this to allow combining, such as.... condition="is_first_turn+is_friendly_turn"
+'''

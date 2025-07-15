@@ -2,6 +2,7 @@ from backend.engine.trigger_observer import trigger_observer
 from backend.engine.trigger_loader import unregister_card_trigger
 from backend.registry.effects import draw_card
 from enum import Enum
+from backend.registry.partner_abilities import PARTNER_ABILITY_METADATA, PARTNER_ABILITY_REGISTRY
 
 class DamageType(Enum):
     COMBAT = "combat"
@@ -166,6 +167,27 @@ def use_ability(player, opponent):
     player.energy -= cost
     print(f"🔥 Used {ability_ref} (Remaining energy: {player.energy})")
 
+'''
+# TBD
+def use_partner_ability(player, target=None):
+    ability = getattr(player, "partner_ability", None)
+    if not ability:
+        print(f"🚫 No partner ability available.")
+        return
+
+    if ability["remaining_cooldown"] > 0:
+        print(f"🕒 Partner ability on cooldown for {player.name}.")
+        return
+
+    if player.energy < ability["cost"]:
+        print(f"❌ Not enough energy for partner ability.")
+        return
+
+    print(f"💥 {player.name} uses partner ability '{ability['name']}'!")
+    ability["function"](player, target)
+    player.energy -= ability["cost"]
+    ability["remaining_cooldown"] = ability["cooldown"]
+'''
 
 def play_card(player, index):
     if index < 0 or index >= len(player.hand):
@@ -201,6 +223,35 @@ def start_turn(player):
     player._class_trait_uses_this_turn = 0
     player._passive_uses_this_turn = 0
 
+    partner = player.partner_character
+    if partner:
+        ref = getattr(partner, "partner_ability_ref", None)
+        if ref:
+            meta = PARTNER_ABILITY_METADATA.get(ref, {})
+            reset = meta.get("reset", "every_turn")
+
+            if reset == "every_turn":
+                player._partner_uses_this_turn = 0
+
+            elif reset.startswith("every_"):
+                try:
+                    n = int(reset.split("_")[1])
+                    player._partner_turns_since_reset += 1
+                    if player._partner_turns_since_reset >= n:
+                        player._partner_uses_this_turn = 0
+                        player._partner_turns_since_reset = 0
+                        print(f"🔄 Partner ability reset for {player.name} (every {n} turns)")
+                except Exception:
+                    print(f"⚠️ Invalid partner ability reset value: {reset}")
+
+    if player.turns_taken == 0:
+        solo = getattr(player, "solo_bonus", None)
+        if solo and solo["timing"] == "start_of_first_turn":
+            print(f"🎁 {player.name}'s solo bonus activates: {solo['description']}")
+            solo["function"](player)
+
+    player.turns_taken += 1
+    
     trigger_observer.emit("turn_started", player=player)
     for card in player.board:
         trigger_observer.emit("turn_started", card=card, player=player)
@@ -213,5 +264,11 @@ def start_turn(player):
 def end_turn(player):
     print(f"⏹ {player.name}'s turn ends.")
     trigger_observer.emit("turn_ended", player=player)
+
+    ability = getattr(player, "partner_ability", None)
+    if ability and ability["remaining_cooldown"] > 0:
+        ability["remaining_cooldown"] -= 1    
+
     for card in player.board:
         trigger_observer.emit("turn_ended", card=card, player=player)
+

@@ -19,9 +19,89 @@ from backend.registry.class_traits import CLASS_TRAITS
 from backend.engine.trigger_observer import trigger_observer
 
 from backend.registry.character_abilities import CHARACTER_ABILITY_METADATA, CHARACTER_ABILITY_REGISTRY
-
-
 from backend.registry.triggers import TRIGGER_REGISTRY
+from backend.registry.partner_abilities import PARTNER_ABILITY_METADATA, PARTNER_ABILITY_REGISTRY
+from backend.registry.solo_abilities import SOLO_BONUS_METADATA, SOLO_BONUS_REGISTRY
+
+def register_solo_bonus(player):
+    if player.partner_character:
+        print(f"🚫 Solo bonus ignored for {player.name} (partner is present)")
+        return
+
+    ref = getattr(player.main_character, "solo_bonus_ref", None)
+    if not ref:
+        return
+
+    meta = SOLO_BONUS_METADATA.get(ref)
+    func = SOLO_BONUS_REGISTRY.get(ref)
+
+    if not meta or not func:
+        print(f"⚠️ Solo bonus '{ref}' is invalid or missing.")
+        return
+
+    player.solo_bonus = {
+        "name": ref,
+        "description": meta.get("description", ""),
+        "function": func,
+        "timing": meta.get("timing", "game_start"),
+    }
+
+    print(f"🎁 Registered solo bonus '{ref}' for {player.name}")
+
+def register_partner_ability(player):
+    player._partner_uses_this_turn = 0
+    player._partner_turns_since_reset = 0
+
+    partner = player.partner_character
+    if not partner:
+        return
+
+    ref = partner.partner_ability_ref
+    if not ref:
+        return
+
+    meta = PARTNER_ABILITY_METADATA.get(ref)
+    func = PARTNER_ABILITY_REGISTRY.get(ref)
+
+    if not meta or not func:
+        print(f"⚠️ {ref} is not a valid partner ability.")
+        return
+
+    if meta["type"] == "passive":
+        trigger_code = meta.get("trigger")
+        limit = meta.get("limit_per_turn", 999)
+        trigger_meta = TRIGGER_REGISTRY.get(trigger_code)
+
+        if not trigger_meta or not trigger_meta["event"]:
+            print(f"❌ Unknown or invalid trigger for partner ability '{ref}'")
+            return
+
+        event_name = trigger_meta["event"]
+
+        def wrapped(**kwargs):
+            if player._partner_uses_this_turn >= limit:
+                print(f"🚫 Partner ability limit reached for {player.name}")
+                return
+
+            print(f"🤝 Partner ability '{ref}' triggered for {player.name}!")
+            func(player)
+            player._partner_uses_this_turn += 1
+
+        trigger_observer.subscribe(event_name, wrapped)
+        print(f"🧩 Registered partner passive '{ref}' for {player.name} (event: {event_name})")
+
+    elif meta["type"] == "active":
+        player.partner_ability = {
+            "name": ref,
+            "description": meta.get("description", ""),
+            "function": func,
+            "cooldown": meta.get("cooldown", 0),
+            "remaining_cooldown": 0,
+            "cost": meta.get("cost", 0),
+            "targeted": meta.get("targeted", False),
+        }
+        print(f"🎯 Registered partner active '{ref}' for {player.name}")
+
 
 def register_passive_ability(player):
     player._passive_uses_this_turn = 0
@@ -111,6 +191,8 @@ def initialize_triggers(player1, player2):
     for player in [player1, player2]:
         register_class_trait(player)
         register_passive_ability(player)
+        register_partner_ability(player)
+        register_solo_bonus(player)
         for card in player.deck + player.hand + player.board:
             register_card_triggers(card, owner=player)
 
@@ -156,8 +238,14 @@ def run_game():
             print(f"  🧍 Main Character: {player.main_character.name} (Class: {player.main_character.class_type})")
             if player.class_trait:
                 print(f"    🧬 Class Trait: {player.class_trait.get('description', 'No description')}")
+            if getattr(player, "solo_bonus", None):
+                print(f"    🎁 Solo Bonus: {player.solo_bonus['description']}")
         if player.partner_character:
             print(f"  🧑‍🤝‍🧑 Partner: {player.partner_character.name}")
+            if getattr(player, "partner_ability", None):
+                partner = player.partner_ability
+                if isinstance(partner, dict):
+                    print(f"    🔸 Partner Ability: {partner['description']}")
         print(f"  ❤️ Starting Health: {player.health}")
         print(f"  📦 Deck size: {len(player.deck)} cards\n")
 
@@ -166,6 +254,11 @@ def run_game():
 
     for p in [player1, player2]:
         draw_card(p, value=3)
+
+        solo = getattr(p, "solo_bonus", None)
+        if solo and solo["timing"] == "game_start":
+            print(f"🎁 {p.name}'s solo bonus activates: {solo['description']}")
+            solo["function"](p)
 
 
     while not game.game_over:

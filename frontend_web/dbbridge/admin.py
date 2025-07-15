@@ -20,6 +20,8 @@ from backend.models import (
 
 from backend.registry.character_abilities import CHARACTER_ABILITY_METADATA
 from backend.registry.deck_restrictions import DECK_RESTRICTION_REGISTRY
+from backend.registry.partner_abilities import PARTNER_ABILITY_REGISTRY
+from backend.registry.solo_abilities import SOLO_BONUS_REGISTRY
 
 
 ### ---- Character Admin Form ----
@@ -37,6 +39,16 @@ class CharacterAdminForm(forms.ModelForm):
             (name, name) for name in DECK_RESTRICTION_REGISTRY.keys()
         ]
 
+    def _get_partner_ability_choices():
+        return [("", "— None —")] + [
+            (name, name) for name in PARTNER_ABILITY_REGISTRY.keys()
+        ]
+
+    def _get_solo_bonus_choices():
+        return [("", "— None —")] + [
+            (name, name) for name in SOLO_BONUS_REGISTRY.keys()
+        ]
+
     passive_ability_ref = forms.ChoiceField(
         choices=_get_filtered_choices("passive"),
         required=False,
@@ -50,13 +62,13 @@ class CharacterAdminForm(forms.ModelForm):
     )
 
     partner_ability_ref = forms.ChoiceField(
-        choices=_get_filtered_choices("partner"),
+        choices=_get_partner_ability_choices(),
         required=False,
         label="Partner Ability"
     )
 
     solo_bonus_ref = forms.ChoiceField(
-        choices=_get_filtered_choices("solo"),
+        choices=_get_solo_bonus_choices(),
         required=False,
         label="Solo Bonus"
     )

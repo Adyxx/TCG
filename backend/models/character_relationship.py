@@ -23,10 +23,11 @@ class CharacterRelationship(models.Model):
     def is_valid_partner(main, partner):
         from backend.models import CharacterRelationship
         return CharacterRelationship.objects.filter(
-            source=main,
-            target=partner,
-            relationship_type="PARTNER"
+            source=main, target=partner, relationship_type="PARTNER"
+        ).exists() and CharacterRelationship.objects.filter(
+            source=partner, target=main, relationship_type="PARTNER"
         ).exists()
+
 
     def __str__(self):
         return f"{self.source.name} → {self.target.name} ({self.relationship_type})"

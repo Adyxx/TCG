@@ -32,11 +32,14 @@ class Player:
             }
             self._class_trait_uses_this_turn = 0
 
+        self._partner_uses_this_turn = 0
+        self._partner_turns_since_reset = 0
         self.hand = []
         self.deck = []
         self.graveyard = []
         self.board = []
         self.cards_played_this_turn = 0
+        self.turns_taken = 0
         self.energy = 0
 
         self.prepare_deck()
@@ -49,10 +52,3 @@ class Player:
                 cards.append(GameCard(deck_card.card))
         random.shuffle(cards)
         self.deck = cards
-
-        '''
-        print(f"📦 Deck for {self.name} prepared with {len(cards)} cards:")
-        names = [card.name for card in cards]
-        for i, name in enumerate(names, 1):
-            print(f"  {i:2}. {name}")
-        '''

@@ -64,6 +64,7 @@ class Player:
         self.energy += 1
         print(f"⚡ {self.name} gains 1 energy → {self.energy} total")
 
+        reset_player_abilities(self)
         draw_card(self, value=1)
 
         trigger_observer.emit("turn_started", player=self)
@@ -76,11 +77,9 @@ class Player:
         self.turn_count += 1
         self.cards_played_this_turn = 0
 
-
     def tick_cooldowns(self):
         for ref in list(self.cooldowns):
             self.cooldowns[ref] = max(0, self.cooldowns[ref] - 1)
-
 
     def end_turn(self):
         print(f"⏹ {self.name}'s turn ends.")

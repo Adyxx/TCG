@@ -14,79 +14,6 @@ from backend.registry.effects import draw_card
 from django.contrib.auth import get_user_model
 
 User = get_user_model()
-'''
-from backend.engine.trigger_observer import trigger_observer
-
-from backend.registry.triggers import TRIGGER_REGISTRY
-from backend.registry.character_abilities import CHARACTER_ABILITIES
-from backend.registry.partner_abilities import PARTNER_ABILITIES
-from backend.registry.solo_abilities import SOLO_ABILITIES
-from backend.registry.class_traits import CLASS_TRAITS
-
-
-
-def register_player_ability(player, ability_type: str, ref: str):
-    registry = ABILITY_SOURCES[ability_type]
-    meta = registry.get_metadata(ref)
-    func = registry.get_function(ref)
-
-    if not meta or not func:
-        print(f"⚠️ {ability_type} ability '{ref}' is invalid or missing.")
-        return
-
-    attr_prefix = {
-        "solo": "solo_bonus",
-        "partner": "partner_ability",
-        "character": "passive_ability",
-        "class": "class_trait",
-    }[ability_type]
-
-    setattr(player, f"_{attr_prefix}_uses_this_turn", 0)
-
-    if meta.get("type") == "passive":
-        trigger_code = meta.get("trigger")
-        limit = meta.get("limit_per_turn", 999)
-        trigger_meta = TRIGGER_REGISTRY.get(trigger_code)
-        if not trigger_meta or not trigger_meta.get("event"):
-            print(f"❌ Unknown or missing trigger for {ability_type} '{ref}'")
-            return
-
-        def wrapped(**kwargs):
-            usage_attr = f"_{attr_prefix}_uses_this_turn"
-            if getattr(player, usage_attr, 0) >= limit:
-                print(f"🚫 {ability_type.title()} limit reached for {player.name}")
-                return
-            print(f"⚡ {ability_type.title()} triggered: '{ref}'")
-            func(player)
-            setattr(player, usage_attr, getattr(player, usage_attr) + 1)
-
-        trigger_observer.subscribe(trigger_meta["event"], wrapped)
-        setattr(player, attr_prefix, meta)
-
-        print(f"✅ Registered {ability_type} passive '{ref}' for {player.name}")
-
-    elif meta.get("type") == "active":
-        setattr(player, attr_prefix, {
-            "name": ref,
-            "description": meta.get("description", ""),
-            "function": func,
-            "cooldown": meta.get("cooldown", 0),
-            "remaining_cooldown": 0,
-            "cost": meta.get("cost", 0),
-            "targeted": meta.get("targeted", False),
-        })
-        print(f"🎯 Registered {ability_type} active '{ref}' for {player.name}")
-
-    else:
-        setattr(player, attr_prefix, {
-            "name": ref,
-            "description": meta.get("description", ""),
-            "function": func,
-            "timing": meta.get("timing", "game_start")
-        })
-        print(f"🎁 Registered {ability_type} '{ref}' for {player.name}")
-'''
-
 
 def initialize_triggers(player1, player2):
     for player in [player1, player2]:
@@ -164,7 +91,7 @@ def run_game():
     current_player = game.current_player()
 
     for p in [player1, player2]:
-        draw_card(p, value=3)
+        draw_card(source=None, target=p, value=3)
 
         solo = getattr(p, "solo_bonus", None)
         if solo and solo.get("timing") == "game_start":

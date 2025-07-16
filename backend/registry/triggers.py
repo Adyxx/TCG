@@ -31,11 +31,17 @@ TRIGGER_REGISTRY = {
         "event": "card_attacked",
         "builder": None,
     },
+    "on_discard": {
+        "description": "Triggered when a card is discarded",
+        "event": "card_discarded",
+        "builder": None,
+    },
     "on_deck_build": {
         "description": "Used only for deck-building validation",
         "event": None,
         "builder": None,
     },
+
 }
 
 

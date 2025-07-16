@@ -1,27 +1,26 @@
+from backend.engine.actions import resolve_damage, DamageType 
 
-def apply_haste(card):
-    print(f"{card.name} gains Haste!")
+def apply_haste(source, target, value=None):
+    print(f"{target.name} gains Haste! (via {source.name})")
 
-def draw_card(player, value=1):
-    for _ in range(value):
+def draw_card(source, target, value):
+    player = target
+    for _ in range(int(value)):
         if player.deck:
             drawn = player.deck.pop(0)
             drawn.owner = player
             player.hand.append(drawn)
-            print(f"🃏 {player.name} drew {drawn.name}.")
+            print(f"🃏 {player.name} drew {drawn.name}")
         else:
             print(f"⚠️ {player.name}'s deck is empty!")
 
-def self_hurt(card, damage):
-    player = card.owner
-    if player is None:
-        print(f"❌ Cannot self-hurt: card.owner is None for {card.name}")
-        return
-    player.health -= damage
-    print(f"Dealing {damage} points of damage to your hero because of {card.name}'s ability! Health is now {player.health}")
+def override_deck_limit(source, target, value):
+    target.override_limit = value
 
-def override_deck_limit(card, new_limit):
-    card.override_limit = new_limit
+def deal_damage(source, target, value):
+    print(f"[🧪] deal_damage(): source={getattr(source, 'name', 'Unknown')}, target={target.name}, value={value}")
+    resolve_damage(source=source, target=target, amount=value, damage_type=DamageType.OTHER)
+
 
 
 EFFECT_REGISTRY = {
@@ -33,13 +32,13 @@ EFFECT_REGISTRY = {
         "func": draw_card,
         "target": "player",
     },
-    "self_hurt": {
-        "func": self_hurt,
-        "target": "card",
-    },
     "override_deck_limit": {
         "func": override_deck_limit,
         "target": "card",
+    },
+    "deal_damage": {
+        "func": deal_damage,
+        "target": None, 
     },
 }
  

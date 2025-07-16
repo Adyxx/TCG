@@ -45,6 +45,8 @@ class Player:
         self.board = []
         self.cards_played_this_turn = 0
         self.turn_count = 0
+        self.max_hand_size = 10
+        self.max_energy = 0
         self.energy = 0
 
         self.prepare_deck()
@@ -58,16 +60,39 @@ class Player:
         random.shuffle(cards)
         self.deck = cards
 
+    def tick_cooldowns(self):
+        for ref in list(self.cooldowns):
+            self.cooldowns[ref] = max(0, self.cooldowns[ref] - 1)
+
+    def prompt_discard(self, count):
+        for _ in range(count):
+            print(f"📜 {self.name}'s hand: ")
+            for idx, card in enumerate(self.hand):
+                print(f"  {idx}: {card.name}")
+            while True:
+                try:
+                    choice = int(input(f"Select a card to discard (0-{len(self.hand)-1}): "))
+                    discarded_card = self.hand.pop(choice)
+                    self.graveyard.append(discarded_card)
+                    trigger_observer.emit("card_discarded", card=discarded_card, player=self)
+                    break
+                except (ValueError, IndexError):
+                    print("❌ Invalid choice. Try again.")
 
     def start_turn(self):
         print(f"▶️ {self.name}'s turn begins.")
-        self.energy += 1
-        print(f"⚡ {self.name} gains 1 energy → {self.energy} total")
+        if self.max_energy < 10:
+            self.max_energy += 1
+
+        self.energy = self.max_energy
+        print(f"⚡ {self.name} restores energy: {self.energy}/{self.max_energy}")
 
         reset_player_abilities(self)
-        draw_card(self, value=1)
+        draw_card(source=None, target=self, value=1)
 
         trigger_observer.emit("turn_started", player=self)
+
+        self.turn_usage["class_active_used"] = False
 
         for card in self.board:
             trigger_observer.emit("turn_started", card=card, player=self)
@@ -77,11 +102,12 @@ class Player:
         self.turn_count += 1
         self.cards_played_this_turn = 0
 
-    def tick_cooldowns(self):
-        for ref in list(self.cooldowns):
-            self.cooldowns[ref] = max(0, self.cooldowns[ref] - 1)
-
     def end_turn(self):
+        if len(self.hand) > self.max_hand_size:
+            excess = len(self.hand) - self.max_hand_size
+            print(f"🗑️ {self.name} has {len(self.hand)} cards. Must discard {excess} cards.")
+            self.prompt_discard(excess)
+
         print(f"⏹ {self.name}'s turn ends.")
         trigger_observer.emit("turn_ended", player=self)
 

@@ -13,4 +13,4 @@ PARTNER_ABILITIES = AbilityRegistry()
 )
 
 def draw_boost(player):
-    draw_card(player, 1)
+    draw_card(source=None, target=player, value=1)

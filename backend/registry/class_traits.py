@@ -15,10 +15,11 @@ def knight_trait(player):
 @CLASS_TRAITS.register(
     "WIZARD",
     type="passive",
-    description="Discard a card to gain +1 temporary energy.",
+    description="Discard a card to gain +1 temporary energy (max once per turn).",
     trigger="on_discard",
     condition="has_not_triggered_this_turn"
 )
 
 def wizard_trait(player):
     player.energy += 1
+

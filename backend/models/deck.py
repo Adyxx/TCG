@@ -42,7 +42,7 @@ class Deck(models.Model):
                         effect_meta = EFFECT_REGISTRY.get(effect_name)
                         if effect_meta:
                             func = effect_meta["func"]
-                            func(card, new_limit)
+                            func(source=card, target=card, value=new_limit)
                             limit = getattr(card, 'override_limit', limit)
                     except (ValueError, TypeError):
                         issues.append(f"Invalid override_deck_limit value on card '{card.name}'")

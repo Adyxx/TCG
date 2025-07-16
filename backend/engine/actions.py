@@ -156,6 +156,7 @@ def use_ability(player, opponent):
     player.energy -= cost
     print(f"🔥 Used {ability_ref} (Remaining energy: {player.energy})")
 
+
 def play_card(player, index):
     if index < 0 or index >= len(player.hand):
         print("🚫 Invalid card index.")
@@ -170,10 +171,28 @@ def play_card(player, index):
 
     player.hand.pop(index)
     card.owner = player
-    card.zone = "board"
-    player.board.append(card)
-    player.energy -= cost
 
+    if card.card_type == "SPELL":
+        print(f"✨ {player.name} casts spell: {card.name}")
+        card.zone = "graveyard"
+        player.graveyard.append(card)
+
+    else:
+        card.zone = "board"
+        player.board.append(card)
+        print(f"▶️ {player.name} plays {card.name} to the board")
+
+        bindings = card.effect_bindings.all()
+        for binding in bindings:
+            print("🧩 [Binding Debug Info]")
+            print(f"   → Trigger: {binding.trigger.script_reference}")
+            print(f"   → Effect: {binding.effect.name} (Requires Target: {binding.effect.requires_target}, Value: {binding.value})")
+            print(f"   → Target Spec: {binding.target_spec}")
+            print(f"   → Condition: {binding.condition}")
+            print(f"   → Restriction: {binding.restriction}")
+
+
+    player.energy -= cost
     print(f"▶️ {player.name} plays {card.name} for {cost} energy (Remaining: {player.energy})")
 
     trigger_observer.emit("card_played", card=card, owner=player)

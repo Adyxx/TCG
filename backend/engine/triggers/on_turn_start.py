@@ -1,20 +1,19 @@
+from backend.engine.trigger_helper import resolve_effect_target
+
 def build(card, owner, binding):
-    effect_func, target = binding.effect.get_executable()
+    effect_func, _ = binding.effect.get_executable()
     value = binding.value
 
     def effect(**kwargs):
         if kwargs.get("card") != card:
             return
-        #print(f"⌛ [on_turn_start] Triggering for {card.name}")
-        
-        target_obj = {
-            "card": card,
-            "player": owner,
-        }[target]
 
-        if value is not None:
-            effect_func(target_obj, value)
-        else:
-            effect_func(target_obj)
+        try:
+            target_obj = resolve_effect_target(owner, card, binding)
+        except ValueError as e:
+            print(f"⚠️ {e}")
+            return
+
+        effect_func(source=card, target=target_obj, value=value)
 
     return effect

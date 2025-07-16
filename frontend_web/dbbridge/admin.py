@@ -116,10 +116,11 @@ class TriggerAdmin(admin.ModelAdmin):
 
 ### ---- Card Admin ----
 
+
 class CardEffectBindingInline(admin.TabularInline):
     model = CardEffectBinding
     extra = 1
-    fields = ['trigger', 'effect', 'value', 'condition', 'restriction']
+    fields = ['trigger', 'effect', 'value', 'target_spec', 'condition', 'restriction']
 
 
 class CardAdmin(admin.ModelAdmin):

@@ -6,6 +6,7 @@ class Effect(models.Model):
     description = models.TextField(blank=True)
     script_reference = models.CharField(max_length=100)
     requires_value = models.BooleanField(default=False)
+    requires_target = models.BooleanField(default=False)
 
     def __str__(self):
         return self.name

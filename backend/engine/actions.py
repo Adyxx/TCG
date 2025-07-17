@@ -182,16 +182,6 @@ def play_card(player, index):
         player.board.append(card)
         print(f"▶️ {player.name} plays {card.name} to the board")
 
-        bindings = card.effect_bindings.all()
-        for binding in bindings:
-            print("🧩 [Binding Debug Info]")
-            print(f"   → Trigger: {binding.trigger.script_reference}")
-            print(f"   → Effect: {binding.effect.name} (Requires Target: {binding.effect.requires_target}, Value: {binding.value})")
-            print(f"   → Target Spec: {binding.target_spec}")
-            print(f"   → Condition: {binding.condition}")
-            print(f"   → Restriction: {binding.restriction}")
-
-
     player.energy -= cost
     print(f"▶️ {player.name} plays {card.name} for {cost} energy (Remaining: {player.energy})")
 

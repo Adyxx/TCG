@@ -23,7 +23,6 @@ def is_players_first_turn(subject, param=None, ref=None):
 
 @register_condition("owner_below_10_health")
 def owner_below_10_health(card, param=None, ref=None):
-    print("OWNER HP:", card.owner.health, "  owner_below_10_health? : ", card.owner.health < 10)
     return hasattr(card, "owner") and card.owner.health < 10
 
 @register_condition("played_2_this_turn")

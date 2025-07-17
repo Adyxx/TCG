@@ -49,6 +49,7 @@ for trigger_code in TRIGGER_REGISTRY:
     try:
         module = importlib.import_module(f"backend.engine.triggers.{trigger_code}")
         TRIGGER_REGISTRY[trigger_code]["builder"] = module.build
+        #print(f"✅ Loaded builder for '{trigger_code}'")
     except ModuleNotFoundError:
         print(f"⚠️ Trigger module '{trigger_code}' not found in backend.engine.triggers")
     except AttributeError:

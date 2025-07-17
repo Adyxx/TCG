@@ -1,7 +1,7 @@
 from backend.engine.trigger_observer import trigger_observer
 
 from backend.registry.triggers import TRIGGER_REGISTRY
-from backend.registry.conditions import CONDITION_REGISTRY
+from backend.registry.conditions import CONDITION_REGISTRY, evaluate_condition
 
 def get_ability_sources():
     from backend.registry.character_abilities import CHARACTER_ABILITIES
@@ -35,30 +35,42 @@ def register_card_triggers(card, owner):
         event = trigger_meta.get("event")
 
         if not event or not builder:
+            #print(f"⚠️ Skipping binding: missing event or builder for trigger '{trigger_code}' on {card.name}")
             continue
 
         base_effect = builder(card=card, owner=owner, binding=binding)
 
+        if not callable(base_effect):
+            print(f"❌ Builder for trigger '{trigger_code}' did not return a valid effect for {card.name}")
+            continue
+
+
         condition = binding.condition
         if condition:
-            script_reference = condition.script_reference
-            condition_func = CONDITION_REGISTRY.get(script_reference)
+            condition_name = condition.script_reference
+            condition_func = CONDITION_REGISTRY.get(condition_name)
+
             if not condition_func:
+                print(f"❌ Unknown condition '{condition_name}' for {card.name}")
                 continue
 
-            def wrapped_effect(*args, **kwargs):
-                if condition_func(card):
-                    base_effect(*args, **kwargs)
-                else:
-                    pass
+            def make_wrapped_effect(card, binding, base_effect, condition_name):
+                def wrapped_effect(*args, **kwargs):
+                    if evaluate_condition(condition_name, card, param=binding.value, ref=binding.effect.name):
+                        base_effect(**kwargs)
 
-            effect_to_register = wrapped_effect
+                return wrapped_effect
+
+            effect_to_register = make_wrapped_effect(card, binding, base_effect, condition_name)
         else:
             effect_to_register = base_effect
 
-        trigger_observer.subscribe(event, effect_to_register)
-        card._registered_effects.append((event, effect_to_register, trigger_code))
 
+        print(effect_to_register)
+        trigger_observer.subscribe(event, effect_to_register)
+        card._registered_effects.append((event, effect_to_register))
+
+        
 
 def unregister_card_trigger(card, trigger_code_to_remove):
     if not hasattr(card, "_registered_effects"):

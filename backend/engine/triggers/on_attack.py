@@ -15,5 +15,5 @@ def build(card, owner, binding):
             return
 
         effect_func(source=card, target=target_obj, value=value)
-
+        print(f"💥 Calling effect_func {effect_func.__name__} from {card.name} → {getattr(target_obj, 'name', target_obj)} (val={value})")
     return effect

@@ -41,13 +41,13 @@ class AbilityRegistry:
         def wrapped(**kwargs):
             if cooldown:
                 if getattr(player, "cooldowns", {}).get(ref, 0) > 0:
-                    #print(f"🧊 Cooldown active for {ref} ({player.name})")
+                    print(f"🧊 Cooldown active for {ref} ({player.name})")
                     return
 
             subject = kwargs.get("card", player)
 
             if not evaluate_condition(condition, subject, ref=ref):
-                #print(f"⚠️ Condition blocked {ref} ({subject.name})")
+                print(f"⚠️ Condition blocked {ref} ({subject.name})")
                 return
 
             print(f"⚡ Triggered passive: {ref} → {player.name}")

@@ -23,6 +23,7 @@ def is_players_first_turn(subject, param=None, ref=None):
 
 @register_condition("owner_below_10_health")
 def owner_below_10_health(card, param=None, ref=None):
+    print("OWNER HP:", card.owner.health, "  owner_below_10_health? : ", card.owner.health < 10)
     return hasattr(card, "owner") and card.owner.health < 10
 
 @register_condition("played_2_this_turn")
@@ -47,6 +48,3 @@ def is_friendly_turn(subject, param=None, ref=None):
     player = get_player(subject)
     return getattr(player, "turn_count", -1) == 0
 
-'''
-later probably expand on this to allow combining, such as.... condition="is_first_turn+is_friendly_turn"
-'''

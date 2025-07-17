@@ -68,8 +68,8 @@ def register_card_triggers(card, owner):
 
         print(effect_to_register)
         trigger_observer.subscribe(event, effect_to_register)
-        card._registered_effects.append((event, effect_to_register))
-
+        #card._registered_effects.append((event, effect_to_register))
+        card._registered_effects.append((event, effect_to_register, trigger_code))
         
 
 def unregister_card_trigger(card, trigger_code_to_remove):

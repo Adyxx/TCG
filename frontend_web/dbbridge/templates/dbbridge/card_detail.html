@@ -1,2 +1,19 @@
 
 {% extends "dbbridge/base.html" %}
+
+{% block title %}{{ card.name }}{% endblock %}
+{% block content %}
+<h2>{{ card.name }}</h2>
+
+                {% if card.image %}
+                    <img src="{{ card.image.url }}" alt="{{ card.name }}" style="max-width: 300px;">
+                {% else %}
+                    <div class="placeholder-image">No Image</div>
+                {% endif %}
+
+<p>Cost: {{ card.cost }}</p>
+<p>Rarity: {{ card.rarity }}</p>
+<p>Type: {{ card.card_type }}</p>
+<p>{{ card.text }}</p>
+<a href="{% url 'card_list' %}">← Back to Card List</a>
+{% endblock %}

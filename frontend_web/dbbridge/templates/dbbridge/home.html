@@ -1,9 +1,28 @@
-
 {% extends "dbbridge/base.html" %}
 
 {% block title %}Welcome... {% endblock %}
 
 {% block content %}
-    <h1>Welcome... </h1>
-    <p>This will later have downloads, updates, news, etc.</p>
+<div class="snap-container">
+    <section class="snap-section section-hero" id="section-home">
+        <h1>Welcome to the World</h1>
+        <p>Downloads, updates, background image, call-to-action buttons go here.</p>
+    </section>
+
+    <section class="snap-section section-characters" id="section-characters">
+        <h2>Meet the Characters</h2>
+        <div class="carousel-placeholder">
+            <p>[Carousel of character cards here]</p>
+        </div>
+    </section>
+
+    <section class="snap-section section-news" id="section-news">
+        <h2>News & Info</h2>
+        <p>Recent updates, patch notes, teaser lore...</p>
+    </section>
+</div>
+
+
 {% endblock %}
+
+

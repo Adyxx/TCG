@@ -1,2 +1,105 @@
-
 {% extends "dbbridge/base.html" %}
+{% block title %}Card Compendium{% endblock %}
+
+{% block content %}
+<div class="tome-container">
+  <h1 class="tome-title">Arcane Card Compendium</h1>
+
+  <!-- Side Tabs (bookmarks) -->
+  <div class="tome-sidebar">
+    <button type="button" class="bookmark-tab" data-target="rarity-panel">🄁 Rarity</button>
+    <button type="button" class="bookmark-tab" data-target="type-panel">🄃 Type</button>
+    <button type="button" class="bookmark-tab" data-target="faction-panel">🄄 Faction</button>
+    <button type="button" class="bookmark-tab" data-target="mana-panel">🄇 Mana</button>
+  </div>
+
+  <!-- Filter Form -->
+  <form method="get" class="tome-filter-form">
+    <!-- Search bar -->
+    <div class="search-bar">
+      <input type="text" name="name" placeholder="🔍 Scry by name or incantation..." value="{{ request.GET.name }}">
+    </div>
+
+    <!-- Side filter panels -->
+    <div class="side-panels">
+      <div class="filter-panel" id="rarity-panel">
+        <label for="rarity">Rarity</label>
+        <select name="rarity" id="rarity">
+          <option value="">All</option>
+          {% for value, label in rarity_choices %}
+            <option value="{{ value }}" {% if request.GET.rarity == value %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="filter-panel" id="type-panel">
+        <label for="card_type">Type</label>
+        <select name="card_type" id="card_type">
+          <option value="">All</option>
+          {% for value, label in type_choices %}
+            <option value="{{ value }}" {% if request.GET.card_type == value %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="filter-panel" id="faction-panel">
+        <label for="faction">Faction</label>
+        <select name="faction" id="faction">
+          <option value="">All</option>
+          {% for faction in factions %}
+            <option value="{{ faction.id }}" {% if request.GET.faction == faction.id|stringformat:"s" %}selected{% endif %}>{{ faction.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="filter-panel" id="mana-panel">
+        <label>Mana Cost:</label>
+        <div class="cost-buttons">
+          {% for i in "0123456"|make_list %}
+            <button type="submit" name="cost" value="{{ i }}" {% if selected_cost == i %}class="selected"{% endif %}>{{ i }}</button>
+          {% endfor %}
+          <button type="submit" name="cost" value="7+" {% if selected_cost == "7+" %}class="selected"{% endif %}>7+</button>
+          <button type="submit" name="cost" value="" {% if not selected_cost %}class="selected"{% endif %}>All</button>
+        </div>
+      </div>
+    </div>
+  </form>
+
+  <!-- Card Grid -->
+  <div class="card-grid">
+    {% for card in page_obj %}
+      <div class="card-item">
+        <a href="{% url 'card_detail' card.id %}">
+          {% if card.image %}
+            <img src="{{ card.image.url }}" alt="{{ card.name }}">
+          {% else %}
+            <div class="placeholder-image">No Image</div>
+          {% endif %}
+          <div class="card-info">
+            <strong>{{ card.name }}</strong><br>
+            ✮️ {{ card.cost }}  ⚔️ {{ card.card_type }} – 💎 {{ card.rarity }}
+            {% if card.text %}
+              <div class="card-text">{{ card.text|truncatewords:20 }}</div>
+            {% endif %}
+          </div>
+        </a>
+      </div>
+    {% empty %}
+      <p>No arcana discovered.</p>
+    {% endfor %}
+  </div>
+
+  <!-- Pagination -->
+  <div class="pagination">
+    {% if page_obj.has_previous %}
+      <a href="?{% if request.GET %}{{ request.GET.urlencode }}&{% endif %}page={{ page_obj.previous_page_number }}">← Turn Page</a>
+    {% endif %}
+
+    <span>Leaf {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+
+    {% if page_obj.has_next %}
+      <a href="?{% if request.GET %}{{ request.GET.urlencode }}&{% endif %}page={{ page_obj.next_page_number }}">Next Page →</a>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

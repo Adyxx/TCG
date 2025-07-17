@@ -5,16 +5,37 @@
     <meta charset="UTF-8">
     <title>{% block title %}TCG Project{% endblock %}</title>
     <link rel="stylesheet" href="{% static 'dbbridge/css/style.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
 </head>
 <body>
-    <nav>
-        <a href="{% url 'home' %}">Home</a> |
-        <a href="{% url 'card_list' %}">Cards</a> |
-        <a href="{% url 'character_list' %}">Characters</a>
+    <nav class="main-nav">
+        <div class="nav-container">
+            <div class="nav-left">
+                <a href="{% url 'home' %}" class="nav-logo">🎴 TCG</a>
+                <a href="{% url 'home' %}" class="{% if request.path == '/' %}active{% endif %}">Home</a>
+                <a href="{% url 'character_list' %}" class="{% if '/characters' in request.path %}active{% endif %}">Characters</a>
+                <a href="{% url 'card_list' %}" class="{% if '/cards' in request.path %}active{% endif %}">Journal</a>
+                <a href="{% url 'news' %}" class="{% if '/news' in request.path %}active{% endif %}">News & Info</a>
+                <a href="{% url 'background' %}" class="{% if '/background' in request.path %}active{% endif %}">Background</a>
+                <div class="nav-dropdown">
+                    <span class="nav-dropdown-toggle">More</span>
+                    <div class="nav-dropdown-menu">
+                        <!-- dropdown stuff, prolly add something in the future..?? -->
+                    </div>
+                </div>
+            </div>
+
+            <div class="nav-right">
+                <a href="#" class="download-btn">Download Now</a>
+                <button class="icon-btn"><i class="fas fa-music"></i></button>
+                <a href="#" class="icon-btn"><i class="fas fa-user"></i></a>
+            </div>
+        </div>
     </nav>
 
     <main>
         {% block content %}{% endblock %}
     </main>
+    <script src="{% static 'dbbridge/js/filter.js' %}"></script>
 </body>
 </html>

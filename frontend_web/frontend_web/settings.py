@@ -36,7 +36,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'dbbridge',
+    'frontend_web.dbbridge',
     'backend',
 ]
 
@@ -52,7 +52,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'frontend_web.urls'
+ROOT_URLCONF = 'frontend_web.frontend_web.urls'
 
 TEMPLATES = [
     {
@@ -70,7 +70,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'frontend_web.wsgi.application'
+WSGI_APPLICATION = 'frontend_web.frontend_web.wsgi.application'
 
 
 # Database

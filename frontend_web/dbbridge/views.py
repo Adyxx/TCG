@@ -75,13 +75,23 @@ def card_detail_view(request, pk):
     return render(request, "dbbridge/card_detail.html", {"card": card})
 
 def character_list_view(request):
-    characters = Character.objects.all()
-    return render(request, "dbbridge/character_list.html", {"characters": characters})
+    factions = Faction.objects.prefetch_related('character_set').all()
+
+    return render(request, "dbbridge/character_list.html", {
+        "factions": factions
+    })
 
 def character_detail_view(request, pk):
     character = get_object_or_404(Character, pk=pk)
-    return render(request, "dbbridge/character_detail.html", {"character": character})
+    
+    character_card = character.cards.filter(is_character_card=True).first()
+    exclusive_cards = character.cards.filter(is_character_exclusive=True)
 
+    return render(request, "dbbridge/character_detail.html", {
+        "character": character,
+        "character_card": character_card,
+        "exclusive_cards": exclusive_cards,
+    })
 def news_view(request):
     return render(request, "dbbridge/news.html")
 

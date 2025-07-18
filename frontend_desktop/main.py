@@ -1,5 +1,16 @@
 from ursina import *
 
+import os
+import django
+
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "frontend_web.frontend_web.settings")
+django.setup()
+
+from .game_session import GameSession
+from .combat_ui import CombatUI
+from backend.models import Deck
+
+
 app = Ursina()
 
 Entity(model='plane', scale=(50,1,50), texture='white_cube', texture_scale=(50,50), color=color.gray)
@@ -20,26 +31,46 @@ zoom_distance = 10
 mouse.locked = False
 
 
-from game_session import GameSession
-from backend.models import Deck
 
 deck1 = Deck.objects.first()
 deck2 = Deck.objects.all()[1]
 
 session = GameSession(deck1, deck2)
 
-def play_first_card():
-    session.play_card(0)
+combat_mode = False
+combat_ui = None 
 
-def end_turn():
-    session.end_turn()
+def exit_combat():
+    global combat_mode, combat_ui
+    combat_mode = False
+    if combat_ui:
+        combat_ui.disable()
+        combat_ui = None
+    print("🚪 Left combat mode.")
 
-Button(text="Play Card 0", on_click=play_first_card)
-Button(text="End Turn", on_click=end_turn)
+def enter_combat():
+    global combat_mode, combat_ui
+    print("🎴 Entering TCG combat!")
+    combat_mode = True
+    combat_ui = CombatUI(session=session, exit_callback=exit_combat)
 
+
+def hide_combat_ui():
+    global combat_ui
+    if combat_ui:
+        for child in combat_ui.children:
+            child.disable()
+        combat_ui.disable()
+
+        combat_ui = None
 
 
 def update():
+    global zoom_distance
+
+    if combat_mode:
+        return 
+    
     global zoom_distance
 
     camera_pivot.rotation_y += mouse.velocity[0] * rotation_speed
@@ -59,6 +90,7 @@ def update():
         camera_pivot.right * (held_keys['d'] - held_keys['a']) +
         camera_pivot.forward * (held_keys['w'] - held_keys['s'])
     ).normalized()
+
     move_dir.y = 0
     player.position += move_dir * 5 * time.dt
 
@@ -69,8 +101,10 @@ def update():
 npc = Entity(model='cube', color=color.cyan, scale=(1.5, 2, 1.5), position=(5,1,0))
 
 def input(key):
+    global combat_mode
+
     if key == 'e' and distance(player.position, npc.position) < 2.5:
-        print("Entering TCG combat!")
+        enter_combat()
     if key == 'tab':
         mouse.locked = not mouse.locked
 

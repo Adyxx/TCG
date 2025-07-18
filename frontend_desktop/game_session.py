@@ -1,24 +1,12 @@
-import sys
-import os
-
-
-project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-sys.path.insert(0, project_root)
-
-import django
-
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "frontend_web.frontend_web.settings")
-django.setup()
-
-
 from backend.engine.game_state import GameState
-from backend.engine.actions import play_card, attack, end_turn, start_turn, use_ability
+from backend.engine.actions import play_card, attack, end_turn, start_turn, use_ability, resolve_combat, resolve_damage
 from backend.engine.player import Player
 from backend.engine.trigger_loader import register_card_triggers, register_player_ability
 from backend.registry.effects import draw_card
 from django.contrib.auth import get_user_model
 
 User = get_user_model()
+
 def initialize_triggers(player1, player2):
     for player in [player1, player2]:
         if player.main_character:
@@ -57,6 +45,13 @@ class GameSession:
             if solo and solo.get("timing") == "game_start":
                 solo["function"](p)
 
+    @property
+    def current_opponent(self):
+        if self.current_player == self.player1:
+            return self.player2
+        else:
+            return self.player1
+        
     def get_hand(self):
         return self.current_player.hand
 
@@ -80,3 +75,21 @@ class GameSession:
 
     def is_game_over(self):
         return self.game.game_over
+
+    def attack_with_card(self, attacker_card, target):
+        attacker = attacker_card.owner
+        defender = self.current_opponent
+
+        if attacker != self.current_player:
+            print("It's not your turn or you don't control this card.")
+            return
+
+        if getattr(attacker_card, "tapped", False):
+            print("This card is already tapped (attacked this turn).")
+            return
+        if getattr(attacker_card, "summoning_sickness", True):
+            print("This card has summoning sickness and cannot attack yet.")
+            return
+
+        resolve_combat(attacker_card, target, attacker, defender)
+

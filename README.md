@@ -8,7 +8,7 @@ CLI-based testing
 Ursina testing
 
 
-> \tcg_project> python frontend_desktop/main.py 
+> \tcg_project> python -m frontend_desktop.main
 
 Django Website
 

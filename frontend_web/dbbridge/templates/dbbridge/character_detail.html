@@ -1,2 +1,112 @@
-
 {% extends "dbbridge/base.html" %}
+{% block title %}{{ character.name }}{% endblock %}
+
+{% block content %}
+<div class="character-detail-container">
+
+  <div class="character-header">
+    <div class="character-portrait">
+      {% if character.image %}
+        <img src="{{ character.image.url }}" alt="{{ character.name }}">
+      {% else %}
+        <div class="character-placeholder">No Image</div>
+      {% endif %}
+    </div>
+    <div class="character-info">
+      <h1>{{ character.name }}</h1>
+      <p><strong>Class:</strong> {{ character.get_class_type_display }}</p>
+      <p><strong>Faction:</strong> {{ character.faction.name }}</p>
+      {% if character.age %}<p><strong>Age:</strong> {{ character.age }}</p>{% endif %}
+      {% if character.height_cm %}<p><strong>Height:</strong> {{ character.height_cm }} cm</p>{% endif %}
+      {% if character.birth_date %}<p><strong>Born:</strong> {{ character.birth_date }}</p>{% endif %}
+      {% if character.subtypes.exists %}
+        <p><strong>Tags:</strong>
+          {% for subtype in character.subtypes.all %}
+            <span class="tag">{{ subtype.name }}</span>{% if not forloop.last %}, {% endif %}
+          {% endfor %}
+        </p>
+      {% endif %}
+    </div>
+  </div>
+
+  {% if character.short_bio %}
+    <div class="character-section">
+      <h2>🔹 Summary</h2>
+      <p>{{ character.short_bio }}</p>
+    </div>
+  {% endif %}
+
+  {% if character.backstory %}
+    <div class="character-section">
+      <h2>📖 Lore</h2>
+      <p>{{ character.backstory|linebreaks }}</p>
+    </div>
+  {% endif %}
+
+  <div class="character-section abilities">
+    <h2>✨ Abilities</h2>
+    <ul>
+      {% if character.passive_description %}
+        <li><strong>{{ character.passive_ability_ref|default:"Passive" }}:</strong> {{ character.passive_description }}</li>
+      {% endif %}
+      {% if character.active_description %}
+        <li><strong>{{ character.active_ability_ref|default:"Active" }}:</strong> {{ character.active_description }}</li>
+      {% endif %}
+      {% if character.partner_description %}
+        <li><strong>{{ character.partner_ability_ref|default:"Partner" }}:</strong> {{ character.partner_description }}</li>
+      {% endif %}
+      {% if character.solo_bonus_description %}
+        <li><strong>{{ character.solo_bonus_ref|default:"Solo Bonus" }}:</strong> {{ character.solo_bonus_description }}</li>
+      {% endif %}
+      {% if character.deck_restriction_description %}
+        <li><strong>{{ character.deck_restriction_ref|default:"Deck Restriction" }}:</strong> {{ character.deck_restriction_description }}</li>
+      {% endif %}
+    </ul>
+  </div>
+
+{% if character_card %}
+  <div class="character-section">
+    <h2>🧙 Character Card</h2>
+    <div class="card-grid">
+      <div class="card-item">
+        <a href="{% url 'card_detail' character_card.id %}">
+          {% if character_card.image %}
+            <img src="{{ character_card.image.url }}" alt="{{ character_card.name }}">
+          {% else %}
+            <div class="placeholder-image">No Image</div>
+          {% endif %}
+          <div class="card-info">
+            <strong>{{ character_card.name }}</strong><br>
+            ✴️ {{ character_card.cost }} ⚔️ {{ character_card.card_type }} – 💎 {{ character_card.rarity }}
+          </div>
+        </a>
+      </div>
+    </div>
+  </div>
+{% endif %}
+
+{% if exclusive_cards %}
+  <div class="character-section">
+    <h2>🔒 Unique Cards</h2>
+    <div class="card-grid">
+      {% for card in exclusive_cards %}
+        <div class="card-item">
+          <a href="{% url 'card_detail' card.id %}">
+            {% if card.image %}
+              <img src="{{ card.image.url }}" alt="{{ card.name }}">
+            {% else %}
+              <div class="placeholder-image">No Image</div>
+            {% endif %}
+            <div class="card-info">
+              <strong>{{ card.name }}</strong><br>
+              ✴️ {{ card.cost }} ⚔️ {{ card.card_type }} – 💎 {{ card.rarity }}
+            </div>
+          </a>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+{% endif %}
+
+</div>
+{% endblock %}
